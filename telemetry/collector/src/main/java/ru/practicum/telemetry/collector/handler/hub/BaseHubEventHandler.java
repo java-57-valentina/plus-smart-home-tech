@@ -9,6 +9,9 @@ import ru.practicum.telemetry.collector.model.hub.HubEvent;
 import ru.practicum.telemetry.collector.service.KafkaEventProducer;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+
 @Slf4j
 @RequiredArgsConstructor
 public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
@@ -27,7 +30,13 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
                 .setPayload(payload)
                 .build();
 
-        ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(topic, eventAvro);
+        ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(
+                topic,
+                null,
+                Instant.now().toEpochMilli(),
+                eventAvro.getHubId(),
+                eventAvro);
+
         log.debug("Sending event to kafka: {}", producerRecord);
         producer.send(producerRecord);
     }

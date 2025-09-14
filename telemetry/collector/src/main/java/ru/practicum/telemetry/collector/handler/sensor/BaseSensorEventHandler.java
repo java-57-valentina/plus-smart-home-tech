@@ -9,6 +9,8 @@ import ru.practicum.telemetry.collector.service.KafkaEventProducer;
 import org.springframework.beans.factory.annotation.Value;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
+import java.time.Instant;
+
 @Slf4j
 @RequiredArgsConstructor
 public abstract class BaseSensorEventHandler<T> implements SensorEventHandler {
@@ -31,7 +33,12 @@ public abstract class BaseSensorEventHandler<T> implements SensorEventHandler {
                 .setPayload(sensorEventAvro)
                 .build();
 
-        ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(topic, eventAvro);
+        ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(
+                topic,
+                null,
+                Instant.now().toEpochMilli(),
+                eventAvro.getHubId(),
+                eventAvro);
         log.debug("Sending event to kafka: {}", producerRecord);
         producer.send(producerRecord);
     }
