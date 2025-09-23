@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import ru.practicum.telemetry.collector.model.sensor.SensorEvent;
 import ru.practicum.telemetry.collector.service.KafkaEventProducer;
 import org.springframework.beans.factory.annotation.Value;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
 import java.time.Instant;
@@ -20,16 +20,16 @@ public abstract class BaseSensorEventHandler<T> implements SensorEventHandler {
 
     private final KafkaEventProducer producer;
 
-    protected abstract T mapToAvro(SensorEvent event);
+    protected abstract T mapToAvro(SensorEventProto event);
 
     @Override
-    public void handleEvent(SensorEvent event) {
+    public void handleEvent(SensorEventProto event) {
 
         T sensorEventAvro = mapToAvro(event);
         SensorEventAvro eventAvro = SensorEventAvro.newBuilder()
                 .setId(event.getId())
                 .setHubId(event.getHubId())
-                .setTimestamp(event.getTimestamp())
+                .setTimestamp(Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos()))
                 .setPayload(sensorEventAvro)
                 .build();
 
@@ -43,10 +43,10 @@ public abstract class BaseSensorEventHandler<T> implements SensorEventHandler {
         producer.send(producerRecord);
     }
 
-    public void validateEventType(SensorEvent event, Class<? extends SensorEvent> expectedClass) {
-        if (!expectedClass.isInstance(event)) {
-            String message = "Expected " + expectedClass.getSimpleName()
-                    + " but got " + event.getClass().getSimpleName() + ". Event ID: " + event.getId();
+    public void validateEventType(SensorEventProto event) {
+        if (event.getPayloadCase() != getEventType()) {
+            String message = "Expected " + getEventType()
+                    + " but got " + event.getPayloadCase() + ". Hub ID: " + event.getHubId();
             throw new IllegalArgumentException(message);
         }
     }
