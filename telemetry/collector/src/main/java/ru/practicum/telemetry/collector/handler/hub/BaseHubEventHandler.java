@@ -5,11 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
-import ru.practicum.telemetry.collector.model.hub.HubEvent;
 import ru.practicum.telemetry.collector.service.KafkaEventProducer;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 
 @Slf4j
@@ -22,11 +21,12 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
     private final KafkaEventProducer producer;
 
     @Override
-    public void handleEvent(HubEvent event) {
+    public void handleEvent(HubEventProto event) {
+        log.debug("handleEvent");
         T payload = toAvro(event);
         HubEventAvro eventAvro = HubEventAvro.newBuilder()
                 .setHubId(event.getHubId())
-                .setTimestamp(event.getTimestamp())
+                .setTimestamp(Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos()))
                 .setPayload(payload)
                 .build();
 
@@ -41,12 +41,12 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
         producer.send(producerRecord);
     }
 
-    protected abstract T toAvro(HubEvent event);
+    protected abstract T toAvro(HubEventProto event);
 
-    public void validateEventType(HubEvent event, Class<? extends HubEvent> expectedClass) {
-        if (!expectedClass.isInstance(event)) {
-            String message = "Expected " + expectedClass.getSimpleName()
-                    + " but got " + event.getClass().getSimpleName() + ". Event ID: " + event.getHubId();
+    public void validateEventType(HubEventProto event) {
+        if (event.getPayloadCase() != getEventType()) {
+            String message = "Expected " + getEventType()
+                    + " but got " + event.getPayloadCase() + ". Hub ID: " + event.getHubId();
             throw new IllegalArgumentException(message);
         }
     }
