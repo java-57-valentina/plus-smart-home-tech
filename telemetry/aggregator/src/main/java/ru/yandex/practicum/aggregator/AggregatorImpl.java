@@ -1,0 +1,111 @@
+package ru.yandex.practicum.aggregator;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.aggregator.processors.SensorEventProcessor;
+import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
+import ru.yandex.practicum.kafka.telemetry.event.SensorStateAvro;
+import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Component
+public class AggregatorImpl implements Aggregator {
+
+    private final Map<String, SensorsSnapshotAvro> sensorsSnapshots = new HashMap<>();
+    private final AggregatorKafkaClient kafkaClient;
+
+    @Value("${kafka.topics.snapshots}")
+    private String topic;
+
+     private final Map<Class<?>, SensorEventProcessor> processors;
+
+    public AggregatorImpl(AggregatorKafkaClient kafkaClient,
+                          List<SensorEventProcessor> processors) {
+        this.kafkaClient = kafkaClient;
+        this.processors = processors.stream()
+                .collect(Collectors.toMap(SensorEventProcessor::getPayloadClass, Function.identity()));
+        log.debug("Processors count: {}", processors.size());
+    }
+
+    @Override
+    public void handle(ConsumerRecord<String, SensorEventAvro> record) {
+        log.info("AggregatorImpl handle {}", record.value().getPayload().getClass().getSimpleName());
+        SensorEventAvro event = record.value();
+        String hubId = event.getHubId();
+        SensorsSnapshotAvro snapshot = sensorsSnapshots.computeIfAbsent(hubId, this::createNewSnapshot);
+        boolean updated = updateSnapshot(snapshot, event);
+
+        if (updated) {
+            snapshot.setTimestamp(Instant.now());
+            log.debug(">> Updated snapshot: {}", snapshot);
+            sendSnapshot(hubId, snapshot);
+        }
+        else {
+            log.debug("!! Skip snapshot: {}", snapshot);
+        }
+    }
+
+    private boolean updateSnapshot(SensorsSnapshotAvro snapshot, SensorEventAvro event) {
+        String sensorId = event.getId();
+        SensorEventProcessor sensorEventProcessor = getProcessorOrThrow(event);
+
+        boolean isNewSensor = !snapshot.getSensorsState().containsKey(sensorId);
+        SensorStateAvro sensorState = snapshot.getSensorsState().computeIfAbsent(sensorId,
+                k -> createNewSensorState(event));
+
+        boolean isDataChanged = sensorEventProcessor.updateIfChanged(sensorState, event);
+        return isNewSensor || isDataChanged;
+    }
+
+    private SensorsSnapshotAvro createNewSnapshot(String hubId) {
+        log.debug("create snapshot for {}", hubId);
+        return SensorsSnapshotAvro.newBuilder()
+                .setHubId(hubId)
+                .setTimestamp(Instant.now())
+                .setSensorsState(new HashMap<>())
+                .build();
+    }
+
+    private SensorStateAvro createNewSensorState(SensorEventAvro eventAvro) {
+        return SensorStateAvro.newBuilder()
+                .setTimestamp(eventAvro.getTimestamp())
+                .setPayload(eventAvro.getPayload())
+                .build();
+    }
+
+    private SensorEventProcessor getProcessorOrThrow(SensorEventAvro event) {
+        Class<?> aClass = event.getPayload().getClass();
+        SensorEventProcessor processor = processors.get(aClass);
+        if (processor == null) {
+            throw new IllegalArgumentException("No processor found for payload type: " + aClass.getSimpleName());
+        }
+        return processor;
+    }
+
+    private void sendSnapshot(String hubId, SensorsSnapshotAvro snapshot) {
+        ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(
+                topic,
+                null,
+                Instant.now().toEpochMilli(),
+                hubId,
+                snapshot);
+        kafkaClient.getProducer().send(producerRecord, (metadata, exception) -> {
+            if (exception != null) {
+                log.error("Ошибка отправки в топик: {}", metadata.topic(), exception);
+            } else {
+                log.debug("Успешно отправлено в топик: {}", metadata.topic());
+            }
+        });
+    }
+}

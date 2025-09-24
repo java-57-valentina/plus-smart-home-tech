@@ -1,13 +1,12 @@
-grpc:
-  server:
-    port: 59091
-
 logging:
   level:
-    ru.practicum.telemetry.collector: DEBUG
+    ru.yandex.practicum.aggregator: DEBUG
 
 kafka:
   bootstrap-server: "localhost:9092"
+  group_id: "group_01"
   topics:
     sensor: "telemetry.sensors.v1"
-    hub: "telemetry.hubs.v1"
+    snapshots: "telemetry.snapshots.v1"
+
+
