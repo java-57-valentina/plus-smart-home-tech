@@ -1,10 +1,8 @@
 package ru.yandex.practicum.aggregator.processors;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.ClimateSensorAvro;
 
-@Slf4j
 @Component
 public class ClimateSensorEventProcessor extends SensorEventProcessorBase {
 
@@ -15,7 +13,6 @@ public class ClimateSensorEventProcessor extends SensorEventProcessorBase {
 
     @Override
     protected boolean updatePayloadIfChanged(Object state, Object event) {
-
         ClimateSensorAvro curPayload = castPayload(state, ClimateSensorAvro.class);
         ClimateSensorAvro newPayload = castPayload(event, ClimateSensorAvro.class);
 

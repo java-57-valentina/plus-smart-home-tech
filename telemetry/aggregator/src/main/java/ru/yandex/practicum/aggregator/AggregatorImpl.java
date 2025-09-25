@@ -40,7 +40,6 @@ public class AggregatorImpl implements Aggregator {
 
     @Override
     public void handle(ConsumerRecord<String, SensorEventAvro> record) {
-        log.info("AggregatorImpl handle {}", record.value().getPayload().getClass().getSimpleName());
         SensorEventAvro event = record.value();
         String hubId = event.getHubId();
         SensorsSnapshotAvro snapshot = sensorsSnapshots.computeIfAbsent(hubId, this::createNewSnapshot);
@@ -48,11 +47,11 @@ public class AggregatorImpl implements Aggregator {
 
         if (updated) {
             snapshot.setTimestamp(Instant.now());
-            log.debug(">> Updated snapshot: {}", snapshot);
+            log.debug("↑ Updated snapshot: {}", snapshot);
             sendSnapshot(hubId, snapshot);
         }
         else {
-            log.debug("!! Skip snapshot: {}", snapshot);
+            log.debug("- Skipped snapshot (no changes): {}", snapshot);
         }
     }
 
@@ -102,9 +101,9 @@ public class AggregatorImpl implements Aggregator {
                 snapshot);
         kafkaClient.getProducer().send(producerRecord, (metadata, exception) -> {
             if (exception != null) {
-                log.error("Ошибка отправки в топик: {}", metadata.topic(), exception);
+                log.error("Failed to send message to topic: {}", metadata.topic(), exception);
             } else {
-                log.debug("Успешно отправлено в топик: {}", metadata.topic());
+                log.debug("Successfully sent to topic: {}", metadata.topic());
             }
         });
     }

@@ -57,7 +57,6 @@ public class AggregatorKafkaClientImpl implements AggregatorKafkaClient {
         }
     }
 
-
     private void initProducer() {
         Properties config = new Properties();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootStrapServer);
@@ -67,16 +66,12 @@ public class AggregatorKafkaClientImpl implements AggregatorKafkaClient {
     }
 
     private void initConsumer() {
-        // consumer.subscribe(List.of(topic));
         Properties config = new Properties();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootStrapServer);
-        // config.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        // config.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "consumer-client-" + counter.getAndIncrement());
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SensorEventAvroDeserializer.class);
         config.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 1000);
-        // config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
         consumer = new KafkaConsumer<>(config);
     }
 }

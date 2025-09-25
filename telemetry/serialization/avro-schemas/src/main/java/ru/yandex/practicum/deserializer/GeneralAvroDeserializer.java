@@ -27,7 +27,7 @@ public abstract class GeneralAvroDeserializer<T extends SpecificRecordBase>
             }
             return null;
         } catch (Exception e) {
-            throw new DeserializationException("Ошибка десериализации данных из топика [" + topic + "]", e);
+            throw new DeserializationException("Data deserialization failure from topic [" + topic + "]", e);
         }
     }
 }

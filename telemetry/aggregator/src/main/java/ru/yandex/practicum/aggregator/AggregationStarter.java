@@ -27,8 +27,6 @@ public class AggregationStarter {
 
     @PostConstruct
     public void init() {
-        log.debug("topic: '{}'", topic);
-        log.debug("consumer: '{}'", this.kafkaClient.getConsumer());
         this.kafkaClient.getConsumer().subscribe(List.of(topic));
     }
 
@@ -38,9 +36,9 @@ public class AggregationStarter {
 
     @Scheduled(fixedDelay = 500)
     public void poll() {
-        // log.debug("{}.poll()", AggregationStarter.class.getSimpleName());
         ConsumerRecords<String, SensorEventAvro> records = kafkaClient.getConsumer().poll(Duration.ofMillis(100));
         for (ConsumerRecord<String, SensorEventAvro> record : records) {
+            log.debug("Received sensor record {}", record);
             handle(record);
         }
     }
