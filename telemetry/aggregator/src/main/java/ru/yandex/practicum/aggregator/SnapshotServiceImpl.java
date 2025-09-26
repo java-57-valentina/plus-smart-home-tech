@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.aggregator.processors.SensorEventProcessor;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
@@ -20,18 +19,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class AggregatorImpl implements Aggregator {
+public class SnapshotServiceImpl implements SnapshotService {
 
     private final Map<String, SensorsSnapshotAvro> sensorsSnapshots = new HashMap<>();
     private final AggregatorKafkaClient kafkaClient;
+    private final KafkaConfig kafkaConfig;
 
-    @Value("${kafka.topics.snapshots}")
-    private String topic;
+    private final Map<Class<?>, SensorEventProcessor> processors;
 
-     private final Map<Class<?>, SensorEventProcessor> processors;
-
-    public AggregatorImpl(AggregatorKafkaClient kafkaClient,
-                          List<SensorEventProcessor> processors) {
+    public SnapshotServiceImpl(KafkaConfig kafkaConfig,
+                               AggregatorKafkaClient kafkaClient,
+                               List<SensorEventProcessor> processors) {
+        this.kafkaConfig = kafkaConfig;
         this.kafkaClient = kafkaClient;
         this.processors = processors.stream()
                 .collect(Collectors.toMap(SensorEventProcessor::getPayloadClass, Function.identity()));
@@ -94,7 +93,7 @@ public class AggregatorImpl implements Aggregator {
 
     private void sendSnapshot(String hubId, SensorsSnapshotAvro snapshot) {
         ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(
-                topic,
+                kafkaConfig.getProducer().getTopic(),
                 null,
                 Instant.now().toEpochMilli(),
                 hubId,

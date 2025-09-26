@@ -1,49 +1,100 @@
 package ru.yandex.practicum.aggregator;
 
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AggregationStarter {
 
     private final AggregatorKafkaClient kafkaClient;
+    private final SnapshotService service;
+    private final KafkaConfig kafkaConfig;
 
-    @Value("${kafka.topics.sensor}")
-    private String topic;
+    public AggregationStarter(AggregatorKafkaClient kafkaClient,
+                              SnapshotService service,
+                              KafkaConfig kafkaConfig) {
+        this.kafkaClient = kafkaClient;
+        this.service = service;
+        this.kafkaConfig = kafkaConfig;
 
-    private final Aggregator baseHandler;
-
-    @PostConstruct
-    public void init() {
-        this.kafkaClient.getConsumer().subscribe(List.of(topic));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("JVM is shooting down. Stop consumer");
+            stop();
+        }));
     }
 
     public void stop() {
         kafkaClient.stop();
     }
 
-    @Scheduled(fixedDelay = 500)
-    public void poll() {
-        ConsumerRecords<String, SensorEventAvro> records = kafkaClient.getConsumer().poll(Duration.ofMillis(100));
-        for (ConsumerRecord<String, SensorEventAvro> record : records) {
-            log.debug("Received sensor record {}", record);
-            handle(record);
+    public void start() {
+        try {
+            log.debug("AggregationStarter::start");
+            this.kafkaClient.getConsumer().subscribe(List.of(kafkaConfig.getConsumer().getTopic()));
+            long pollTimeoutMs = kafkaConfig.getConsumer().pollTimeoutMs;
+            while (true) {
+
+                ConsumerRecords<String, SensorEventAvro> records =
+                        kafkaClient.getConsumer().poll(Duration.ofMillis(pollTimeoutMs));
+                if (!records.isEmpty()) {
+                    Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
+                    int processed = 0;
+
+                    for (ConsumerRecord<String, SensorEventAvro> record : records) {
+                        log.debug("Received sensor record {}", record);
+                        service.handle(record);
+                        processed++;
+
+                        updateOffsets(record, offsets);
+                        if (processed % 10 == 0)
+                            commitOffsets(offsets, processed);
+                    }
+                    kafkaClient.getProducer().flush();
+                    commitOffsets(offsets, processed);
+                }
+            }
+        }
+        catch (WakeupException e) {
+            log.error(e.getMessage());
+        }
+        catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+        finally {
+            log.info("Consumer was closed");
+            kafkaClient.getProducer().flush();
+            kafkaClient.getProducer().close();
+            kafkaClient.getConsumer().close();
         }
     }
 
-    public void handle(ConsumerRecord<String, SensorEventAvro> record) {
-        baseHandler.handle(record);
+    private static void updateOffsets(ConsumerRecord<String, SensorEventAvro> record, Map<TopicPartition, OffsetAndMetadata> offsets) {
+        offsets.put(
+                new TopicPartition(record.topic(), record.partition()),
+                new OffsetAndMetadata(record.offset(), "")
+        );
+    }
+
+    private void commitOffsets(Map<TopicPartition, OffsetAndMetadata> offsets, int processedCount) {
+        if (offsets.isEmpty())
+            return;
+
+        kafkaClient.getConsumer().commitAsync(offsets, (map, exception) -> {
+            if (exception != null) {
+                log.error("Failed to commit offsets for {} records", processedCount, exception);
+            }
+        });
     }
 }
