@@ -36,12 +36,13 @@ public class AggregationStarter {
     }
 
     public void stop() {
+        log.info("AggregationStarter::stop");
         kafkaClient.stop();
     }
 
     public void start() {
+        log.info("AggregationStarter::start");
         try {
-            log.debug("AggregationStarter::start");
             this.kafkaClient.getConsumer().subscribe(List.of(kafkaConfig.getConsumer().getTopic()));
             long pollTimeoutMs = kafkaConfig.getConsumer().pollTimeoutMs;
             while (true) {
