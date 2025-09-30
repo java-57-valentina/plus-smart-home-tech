@@ -1,0 +1,26 @@
+logging:
+  level:
+    ru.yandex.practicum.analyzer: DEBUG
+
+kafka:
+  hubEventsConsumer:
+    bootstrapServer: "localhost:9092"
+    client_id: "client_01"
+    group_id: "group_02"
+    topic: "telemetry.hubs.v1"
+    maxPollIntervalMs : 1000
+    pollTimeoutMs: 100
+    enableAutoCommit: "false"
+  snapshotsConsumer:
+    bootstrapServer: "localhost:9092"
+    client_id: "client_01"
+    group_id: "group_03"
+    topic: "telemetry.snapshots.v1"
+    maxPollIntervalMs: 1000
+    pollTimeoutMs: 100
+    enableAutoCommit: "false"
+  producer:
+    bootstrapServer: "localhost:9092"
+    topic: "telemetry.test.v1"
+
+
