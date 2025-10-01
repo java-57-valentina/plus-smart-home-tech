@@ -34,23 +34,26 @@ public class SnapshotServiceImpl implements SnapshotService {
         this.kafkaClient = kafkaClient;
         this.processors = processors.stream()
                 .collect(Collectors.toMap(SensorEventProcessor::getPayloadClass, Function.identity()));
-        log.debug("Processors count: {}", processors.size());
     }
 
     @Override
     public void handle(ConsumerRecord<String, SensorEventAvro> record) {
-        SensorEventAvro event = record.value();
-        String hubId = event.getHubId();
-        SensorsSnapshotAvro snapshot = sensorsSnapshots.computeIfAbsent(hubId, this::createNewSnapshot);
-        boolean updated = updateSnapshot(snapshot, event);
+        try {
+            SensorEventAvro event = record.value();
+            String hubId = event.getHubId();
+            SensorsSnapshotAvro snapshot = sensorsSnapshots.computeIfAbsent(hubId, this::createNewSnapshot);
+            boolean updated = updateSnapshot(snapshot, event);
 
-        if (updated) {
-            snapshot.setTimestamp(Instant.now());
-            log.debug("↑ Updated snapshot: {}", snapshot);
-            sendSnapshot(hubId, snapshot);
-        }
-        else {
-            log.debug("- Skipped snapshot (no changes): {}", snapshot);
+            if (updated) {
+                snapshot.setTimestamp(Instant.now());
+                log.debug("↑ Updated snapshot: {}", snapshot);
+                sendSnapshot(hubId, snapshot);
+            } else {
+                log.debug("- Skipped snapshot (no changes): {}", snapshot);
+            }
+        } catch (Exception ex) {
+            log.error("Failed to process record: {}", record);
+            log.error(ex.getMessage());
         }
     }
 
