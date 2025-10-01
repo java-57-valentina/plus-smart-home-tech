@@ -32,7 +32,7 @@ public class ConditionChecker {
 
         Condition condition = scenarioCondition.getCondition();
         ConditionOperationAvro operator = condition.getOperation();
-        int sensorValue = getSensorValue(condition, sensorStateAvro.getPayload());
+        int sensorValue = getSensorValue(condition.getType(), sensorStateAvro.getPayload());
 
         boolean result = evaluate(operator, sensorValue, condition.getValue());
         log.debug("{}: value: {}  operation: {} threshold: {} result: {}",
@@ -45,8 +45,7 @@ public class ConditionChecker {
         return result;
     }
 
-    private static int getSensorValue(Condition condition, Object payload) {
-        ConditionTypeAvro conditionType = condition.getType();
+    private static int getSensorValue(ConditionTypeAvro conditionType, Object payload) {
 
         return switch (conditionType) {
             case MOTION     -> ((MotionSensorAvro) payload).getMotion() ? 1 : 0;
