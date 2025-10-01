@@ -30,46 +30,9 @@ public class ConditionChecker {
         if (sensorStateAvro == null)
             return false;
 
-        Object payload = sensorStateAvro.getPayload();
-
         Condition condition = scenarioCondition.getCondition();
         ConditionOperationAvro operator = condition.getOperation();
-        ConditionTypeAvro conditionType = condition.getType();
-        int sensorValue = 0;
-
-        switch (conditionType) {
-            case MOTION: {
-                MotionSensorAvro payload1 = (MotionSensorAvro) payload;
-                sensorValue = payload1.getMotion() ? 1 : 0;
-                break;
-            }
-            case LUMINOSITY: {
-                LightSensorAvro payload1 = (LightSensorAvro) payload;
-                sensorValue = payload1.getLuminosity();
-                break;
-            }
-            case SWITCH: {
-                SwitchSensorAvro payload1 = (SwitchSensorAvro) payload;
-                sensorValue = payload1.getState() ? 1 : 0;
-                break;
-            }
-            case TEMPERATURE: {
-                // TemperatureSensorAvro
-                ClimateSensorAvro payload1 = (ClimateSensorAvro) payload;
-                sensorValue = payload1.getTemperatureC();
-                break;
-            }
-            case CO2LEVEL: {
-                ClimateSensorAvro payload1 = (ClimateSensorAvro) payload;
-                sensorValue = payload1.getCo2Level();
-                break;
-            }
-            case HUMIDITY: {
-                ClimateSensorAvro payload1 = (ClimateSensorAvro) payload;
-                sensorValue = payload1.getHumidity();
-                break;
-            }
-        }
+        int sensorValue = getSensorValue(condition.getType(), sensorStateAvro.getPayload());
 
         boolean result = evaluate(operator, sensorValue, condition.getValue());
         log.debug("{}: value: {}  operation: {} threshold: {} result: {}",
@@ -80,5 +43,19 @@ public class ConditionChecker {
                 result);
 
         return result;
+    }
+
+    private static int getSensorValue(ConditionTypeAvro conditionType, Object payload) {
+
+        return switch (conditionType) {
+            case MOTION     -> ((MotionSensorAvro) payload).getMotion() ? 1 : 0;
+            case LUMINOSITY -> ((LightSensorAvro) payload).getLuminosity();
+            case SWITCH     -> ((SwitchSensorAvro) payload).getState() ? 1 : 0;
+            case TEMPERATURE -> (payload instanceof ClimateSensorAvro)
+                    ? ((ClimateSensorAvro) payload).getTemperatureC()
+                    : ((TemperatureSensorAvro) payload).getTemperatureC();
+            case CO2LEVEL   -> ((ClimateSensorAvro) payload).getCo2Level();
+            case HUMIDITY   -> ((ClimateSensorAvro) payload).getHumidity();
+        };
     }
 }
