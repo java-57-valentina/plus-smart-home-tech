@@ -3,13 +3,13 @@ package ru.yandex.practicum.analyzer.consumer;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import ru.yandex.practicum.analyzer.KafkaConfig;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 @Slf4j
@@ -40,12 +40,15 @@ public abstract class BaseConsumer<T extends SpecificRecordBase> {
         return consumer.poll(duration);
     }
 
-    public void commitAsync() {
-        consumer.commitAsync();
+    public void commitAsync(Map<TopicPartition, OffsetAndMetadata> var1, OffsetCommitCallback var2) {
+        consumer.commitAsync(var1, var2);
     }
 
     public void close() {
-        consumer.wakeup();
         consumer.close();
+    }
+
+    public void wakeup() {
+        consumer.wakeup();
     }
 }

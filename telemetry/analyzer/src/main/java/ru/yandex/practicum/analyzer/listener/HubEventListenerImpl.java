@@ -26,6 +26,8 @@ public class HubEventListenerImpl implements HubEventListener {
     private final HubEventConsumer hubEventConsumer;
     private final AnalyzerService service;
 
+    private volatile boolean running = false;
+
     @Autowired
     public HubEventListenerImpl(KafkaConfig kafkaConfig,
                                 HubEventConsumer hubEventConsumer,
@@ -37,12 +39,13 @@ public class HubEventListenerImpl implements HubEventListener {
 
     @Override
     public void run() {
-        System.out.println("HubEventListenerImpl.run");
+        log.debug("HubEventListenerImpl.run");
+        running = true;
 
         try {
             hubEventConsumer.subscribe(List.of(consumerConfig.getTopic()));
             long pollTimeoutMs = consumerConfig.pollTimeoutMs;
-            while (true) {
+            while (running) {
 
                 ConsumerRecords<String, HubEventAvro> records =
                         hubEventConsumer.poll(Duration.ofMillis(pollTimeoutMs));
@@ -51,32 +54,55 @@ public class HubEventListenerImpl implements HubEventListener {
                     int processed = 0;
 
                     for (ConsumerRecord<String, HubEventAvro> record : records) {
-                        log.debug("Received hubEvent record {}", record);
+                        try {
+                            log.debug("Received hubEvent record {}", record);
 
-                        service.handle(record.value());
-                        processed++;
+                            service.handle(record.value());
+                            processed++;
 
-                        // updateOffsets(record, offsets);
-//                        if (processed % 10 == 0)
-//                            commitOffsets(offsets, processed);
+                            updateOffsets(record, offsets);
+                            if (processed % 10 == 0)
+                                commitOffsets(offsets, processed);
+                        } catch (Exception e) {
+                            log.error("Failed to process record: topic={}, partition={}, offset={}",
+                                    record.topic(), record.partition(), record.offset(), e);
+                        }
                     }
-                    // snapShotConsumerConfig.getProducer().flush();
-                    // commitOffsets(offsets, processed);
-                    hubEventConsumer.commitAsync();
+                    commitOffsets(offsets, processed);
                 }
             }
-        }
-        catch (WakeupException e) {
-            log.error(e.getMessage());
-        }
-        catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-        finally {
-            log.info("Consumer was closed");
-            // snapShotConsumerConfig.getProducer().flush();
-            // snapShotConsumerConfig.getProducer().close();
+        } catch (WakeupException e) {
+            log.info("Hub events consumer wakeup received - graceful shutdown");
+        } catch (Exception e) {
+            log.error("Unexpected error in Hub events consumer loop", e);
+        } finally {
+            log.info("Close Hub events consumer");
             hubEventConsumer.close();
         }
+    }
+
+    private static void updateOffsets(ConsumerRecord<String, HubEventAvro> record,
+                                      Map<TopicPartition, OffsetAndMetadata> offsets) {
+        offsets.put(
+                new TopicPartition(record.topic(), record.partition()),
+                new OffsetAndMetadata(record.offset(), "")
+        );
+    }
+
+    private void commitOffsets(Map<TopicPartition, OffsetAndMetadata> offsets, int processedCount) {
+        if (offsets.isEmpty())
+            return;
+
+        hubEventConsumer.commitAsync(offsets, (map, exception) -> {
+            if (exception != null) {
+                log.error("Failed to commit offsets for {} records", processedCount, exception);
+            }
+        });
+        offsets.clear();
+    }
+
+    public void stop() {
+        running = false;
+        hubEventConsumer.wakeup();
     }
 }
