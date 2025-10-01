@@ -1,4 +1,4 @@
-package ru.yandex.practicum.analyzer.hubevent;
+package ru.yandex.practicum.analyzer.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -8,9 +8,10 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.analyzer.AnalyzerService;
+import ru.yandex.practicum.analyzer.service.AnalyzerService;
 import ru.yandex.practicum.analyzer.KafkaConfig;
-import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
+import ru.yandex.practicum.analyzer.consumer.HubEventConsumer;
+import ru.yandex.practicum.kafka.telemetry.event.*;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -19,16 +20,16 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class HubEventProcessorImpl implements HubEventProcessor {
+public class HubEventListenerImpl implements HubEventListener {
 
     private final KafkaConfig.ConsumerConfig consumerConfig;
     private final HubEventConsumer hubEventConsumer;
     private final AnalyzerService service;
 
     @Autowired
-    public HubEventProcessorImpl(KafkaConfig kafkaConfig,
-                                 HubEventConsumer hubEventConsumer,
-                                 AnalyzerService service) {
+    public HubEventListenerImpl(KafkaConfig kafkaConfig,
+                                HubEventConsumer hubEventConsumer,
+                                AnalyzerService service) {
         this.consumerConfig = kafkaConfig.getHubEventsConsumer();
         this.hubEventConsumer = hubEventConsumer;
         this.service = service;
@@ -36,7 +37,8 @@ public class HubEventProcessorImpl implements HubEventProcessor {
 
     @Override
     public void run() {
-        System.out.println("HubEventProcessorImpl.run");
+        System.out.println("HubEventListenerImpl.run");
+
         try {
             hubEventConsumer.subscribe(List.of(consumerConfig.getTopic()));
             long pollTimeoutMs = consumerConfig.pollTimeoutMs;

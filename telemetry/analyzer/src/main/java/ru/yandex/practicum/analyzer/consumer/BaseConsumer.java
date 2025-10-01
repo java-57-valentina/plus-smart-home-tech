@@ -1,4 +1,4 @@
-package ru.yandex.practicum.analyzer;
+package ru.yandex.practicum.analyzer.consumer;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -6,6 +6,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import ru.yandex.practicum.analyzer.KafkaConfig;
 
 import java.time.Duration;
 import java.util.List;

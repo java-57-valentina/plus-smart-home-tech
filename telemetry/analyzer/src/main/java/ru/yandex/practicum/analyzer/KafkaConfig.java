@@ -5,8 +5,6 @@ import lombok.Setter;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import ru.yandex.practicum.deserializer.HubEventAvroDeserializer;
-import ru.yandex.practicum.deserializer.SensorEventAvroDeserializer;
 
 import java.util.Properties;
 

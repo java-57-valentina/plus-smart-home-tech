@@ -1,4 +1,4 @@
-package ru.yandex.practicum.analyzer.snapshot;
+package ru.yandex.practicum.analyzer.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -8,8 +8,9 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.analyzer.AnalyzerService;
+import ru.yandex.practicum.analyzer.service.AnalyzerService;
 import ru.yandex.practicum.analyzer.KafkaConfig;
+import ru.yandex.practicum.analyzer.consumer.SnapshotConsumer;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
 import java.time.Duration;
@@ -19,16 +20,16 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class SnapshotProcessorImpl implements SnapshotProcessor {
+public class SnapshotListenerImpl implements SnapshotListener {
 
     private final KafkaConfig.ConsumerConfig consumerConfig;
     private final SnapshotConsumer snapshotConsumer;
     private final AnalyzerService service;
 
     @Autowired
-    public SnapshotProcessorImpl(KafkaConfig kafkaConfig,
-                                 SnapshotConsumer snapshotConsumer,
-                                 AnalyzerService service) {
+    public SnapshotListenerImpl(KafkaConfig kafkaConfig,
+                                SnapshotConsumer snapshotConsumer,
+                                AnalyzerService service) {
         this.consumerConfig = kafkaConfig.getSnapshotsConsumer();
         this.snapshotConsumer = snapshotConsumer;
         this.service = service;
@@ -36,7 +37,7 @@ public class SnapshotProcessorImpl implements SnapshotProcessor {
 
     @Override
     public void run() {
-        System.out.println("SnapshotProcessorImpl.run");
+        System.out.println("SnapshotListenerImpl.run");
         try {
             snapshotConsumer.subscribe(List.of(consumerConfig.getTopic()));
             long pollTimeoutMs = consumerConfig.pollTimeoutMs;
