@@ -41,3 +41,10 @@ spring:
     username: dbuser
     password: 123456
 
+grpc:
+  client:
+    hubrouter:
+      address: 'localhost:59090'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
