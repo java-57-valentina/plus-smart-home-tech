@@ -66,15 +66,12 @@ public class AggregationStarter {
                     commitOffsets(offsets, processed);
                 }
             }
-        }
-        catch (WakeupException e) {
+        } catch (WakeupException e) {
             log.error(e.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
-        }
-        finally {
-            log.info("Consumer was closed");
+        } finally {
+            log.info("Close sensor events consumer");
             kafkaClient.getProducer().flush();
             kafkaClient.getProducer().close();
             kafkaClient.getConsumer().close();
