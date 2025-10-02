@@ -40,6 +40,10 @@ public abstract class BaseConsumer<T extends SpecificRecordBase> {
         return consumer.poll(duration);
     }
 
+    public void commitAsync() {
+        consumer.commitAsync();
+    }
+
     public void commitAsync(Map<TopicPartition, OffsetAndMetadata> var1, OffsetCommitCallback var2) {
         consumer.commitAsync(var1, var2);
     }
