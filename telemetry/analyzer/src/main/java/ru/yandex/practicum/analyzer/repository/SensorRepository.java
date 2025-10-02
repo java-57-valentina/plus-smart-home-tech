@@ -9,8 +9,6 @@ import java.util.Set;
 public interface SensorRepository extends JpaRepository<Sensor, String> {
 
     List<Sensor> findAllByHubIdAndIdIn(String hubId, Set<String> ids);
-
-    long countByHubIdAndIdIn(String hubId, Set<String> ids);
-
+    
     void deleteByHubIdAndId(String hubId, String name);
 }
