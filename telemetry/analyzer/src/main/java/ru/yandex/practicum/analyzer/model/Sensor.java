@@ -13,8 +13,8 @@ import lombok.*;
 @Table(name = "sensors")
 public class Sensor {
     @Id
-    String id;
+    private String id;
 
     @Column(name = "hub_id")
-    String hubId;
+    private String hubId;
 }

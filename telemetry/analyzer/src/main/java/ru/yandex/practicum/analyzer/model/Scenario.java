@@ -31,10 +31,10 @@ public class Scenario {
     @Builder.Default
     @ToString.Exclude
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ScenarioCondition> scenarioConditions = new ArrayList<>();
+    private List<ScenarioCondition> scenarioConditions = new ArrayList<>();
 
     @Builder.Default
     @ToString.Exclude
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ScenarioAction> scenarioActions = new ArrayList<>();
+    private List<ScenarioAction> scenarioActions = new ArrayList<>();
 }
