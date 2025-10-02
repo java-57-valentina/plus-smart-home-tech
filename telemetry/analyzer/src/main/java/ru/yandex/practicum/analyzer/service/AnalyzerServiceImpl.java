@@ -75,17 +75,8 @@ public class AnalyzerServiceImpl implements AnalyzerService {
         List<ScenarioCondition> conditions = s.getScenarioConditions();
         Map<String, SensorStateAvro> stateMap = snapshotAvro.getSensorsState();
 
-        for (ScenarioCondition sc : conditions) {
-            if (!conditionChecker.check(sc, stateMap)) {
-                log.debug("- the condition does not match '{} {} {}' for {}",
-                        sc.getCondition().getType(),
-                        sc.getCondition().getOperation(),
-                        sc.getCondition().getValue(),
-                        sc.getSensor().getId());
-                return false;
-            }
-        }
-        return true;
+        return conditions.stream()
+                .allMatch(sc -> conditionChecker.check(sc, stateMap));
     }
 
     @Override
