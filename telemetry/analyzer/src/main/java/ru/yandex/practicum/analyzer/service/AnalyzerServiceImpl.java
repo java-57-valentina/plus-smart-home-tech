@@ -53,7 +53,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                 log.debug("Scenario '{}' is match!", s.getName());
                 List<DeviceActionRequest> actionRequests = collectActions(s);
                 for (DeviceActionRequest ar : actionRequests) {
-                    log.debug("send action: {} {} {}", ar.getAction().getSensorId(), ar.getAction().getType(), ar.getAction().getI());
+                    log.debug("send action: {} {} {}", ar.getAction().getSensorId(), ar.getAction().getType(), ar.getAction().getValue());
                     try {
                         //noinspection ResultOfMethodCallIgnored
                         hubRouterController.handleDeviceAction(ar);

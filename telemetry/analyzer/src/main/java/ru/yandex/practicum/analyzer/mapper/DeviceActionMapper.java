@@ -19,7 +19,7 @@ public class DeviceActionMapper {
                 .setAction(DeviceActionProto.newBuilder()
                         .setSensorId(action.getSensor().getId())
                         .setType(ActionTypeProto.valueOf("ACTION_" + action.getAction().getType().name()))
-                        .setI(action.getAction().getValue())
+                        .setValue(action.getAction().getValue())
                         .build())
                 .build();
     }

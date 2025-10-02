@@ -14,7 +14,7 @@ public class ScenarioActionMapper {
         return DeviceActionAvro.newBuilder()
                 .setSensorId(action.getSensorId())
                 .setType(actionType)
-                .setValue(action.getI())
+                .setValue(action.getValue())
                 .build();
     }
 

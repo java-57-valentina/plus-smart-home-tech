@@ -35,6 +35,11 @@ public class SnapshotListenerImpl implements SnapshotListener {
         this.consumerConfig = kafkaConfig.getSnapshotsConsumer();
         this.snapshotConsumer = snapshotConsumer;
         this.service = service;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("JVM is shooting down. Stop consumer");
+            stop();
+        }));
     }
 
     @Override

@@ -35,11 +35,6 @@ public class AggregationStarter {
         }));
     }
 
-    public void stop() {
-        log.info("AggregationStarter::stop");
-        kafkaClient.stop();
-    }
-
     public void start() {
         log.info("AggregationStarter::start");
         try {
@@ -94,5 +89,10 @@ public class AggregationStarter {
                 log.error("Failed to commit offsets for {} records", processedCount, exception);
             }
         });
+    }
+
+    public void stop() {
+        log.info("AggregationStarter::stop");
+        kafkaClient.stop();
     }
 }

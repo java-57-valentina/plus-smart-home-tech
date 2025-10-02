@@ -35,6 +35,11 @@ public class HubEventListenerImpl implements HubEventListener {
         this.consumerConfig = kafkaConfig.getHubEventsConsumer();
         this.hubEventConsumer = hubEventConsumer;
         this.service = service;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("JVM is shooting down. Stop consumer");
+            stop();
+        }));
     }
 
     @Override
