@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.analyzer.exception.DeviceNotFoundException;
-import ru.yandex.practicum.analyzer.exception.DuplicateScenarioException;
 import ru.yandex.practicum.analyzer.model.*;
 import ru.yandex.practicum.analyzer.repository.ActionRepository;
 import ru.yandex.practicum.analyzer.repository.ConditionRepository;
@@ -48,6 +47,10 @@ public class ScenarioAddedEventProcessor extends HubEventProcessorBase {
                 .map(DeviceActionAvro::getSensorId)
                 .collect(Collectors.toSet()));
 
+        if (scenarioRepository.existsByHubIdAndName(event.getHubId(), payload.getName())) {
+            log.info("Scenario {} already exists in hub {}", payload.getName(), event.getHubId());
+            return;
+        }
         Scenario scenario = saveScenario(event.getHubId(), payload.getName());
         List<ScenarioCondition> scenarioConditions = saveConditions(scenario, payload.getConditions());
         List<ScenarioAction> scenarioActions = saveActions(scenario, payload.getActions());
@@ -144,10 +147,6 @@ public class ScenarioAddedEventProcessor extends HubEventProcessorBase {
     }
 
     private Scenario saveScenario(String hubId, String name) {
-        Optional<Scenario> existing = scenarioRepository.findByHubIdAndName(hubId, name);
-        if (existing.isPresent())
-            throw new DuplicateScenarioException(name, hubId);
-
         Scenario scenario = Scenario.builder()
                 .hubId(hubId)
                 .name(name)

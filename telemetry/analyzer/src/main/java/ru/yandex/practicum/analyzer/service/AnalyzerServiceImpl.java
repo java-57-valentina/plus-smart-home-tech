@@ -2,7 +2,6 @@ package ru.yandex.practicum.analyzer.service;
 
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.analyzer.mapper.DeviceActionMapper;
@@ -32,7 +31,6 @@ public class AnalyzerServiceImpl implements AnalyzerService {
     @GrpcClient("hubrouter")
     private HubRouterControllerGrpc.HubRouterControllerBlockingStub hubRouterController;
 
-    @Autowired
     public AnalyzerServiceImpl(
                                List<HubEventProcessor> hubEventProcessors,
                                ScenarioRepository scenarioRepository,

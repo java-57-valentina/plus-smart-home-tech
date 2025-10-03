@@ -1,9 +1,12 @@
 package ru.yandex.practicum.aggregator;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
@@ -18,16 +21,18 @@ import java.util.Map;
 @Component
 public class AggregationStarter {
 
-    private final AggregatorKafkaClient kafkaClient;
     private final SnapshotService service;
     private final KafkaConfig kafkaConfig;
+    private final Consumer<String, SensorEventAvro> sensorEventConsumer;
+    private final Producer<String, SpecificRecordBase> producer;
 
     public AggregationStarter(AggregatorKafkaClient kafkaClient,
                               SnapshotService service,
                               KafkaConfig kafkaConfig) {
-        this.kafkaClient = kafkaClient;
         this.service = service;
         this.kafkaConfig = kafkaConfig;
+        this.sensorEventConsumer = kafkaClient.getConsumer();
+        this.producer = kafkaClient.getProducer();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("JVM is shooting down. Stop consumer");
@@ -38,12 +43,12 @@ public class AggregationStarter {
     public void start() {
         log.info("AggregationStarter::start");
         try {
-            this.kafkaClient.getConsumer().subscribe(List.of(kafkaConfig.getConsumer().getTopic()));
+            sensorEventConsumer.subscribe(List.of(kafkaConfig.getConsumer().getTopic()));
             long pollTimeoutMs = kafkaConfig.getConsumer().pollTimeoutMs;
             while (true) {
 
                 ConsumerRecords<String, SensorEventAvro> records =
-                        kafkaClient.getConsumer().poll(Duration.ofMillis(pollTimeoutMs));
+                        sensorEventConsumer.poll(Duration.ofMillis(pollTimeoutMs));
                 if (!records.isEmpty()) {
                     Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
                     int processed = 0;
@@ -57,7 +62,7 @@ public class AggregationStarter {
                         if (processed % 10 == 0)
                             commitOffsets(offsets, processed);
                     }
-                    kafkaClient.getProducer().flush();
+                    producer.flush();
                     commitOffsets(offsets, processed);
                 }
             }
@@ -67,9 +72,9 @@ public class AggregationStarter {
             log.error(e.getMessage(), e);
         } finally {
             log.info("Close sensor events consumer");
-            kafkaClient.getProducer().flush();
-            kafkaClient.getProducer().close();
-            kafkaClient.getConsumer().close();
+            producer.flush();
+            producer.close();
+            sensorEventConsumer.close();
         }
     }
 
@@ -84,7 +89,7 @@ public class AggregationStarter {
         if (offsets.isEmpty())
             return;
 
-        kafkaClient.getConsumer().commitAsync(offsets, (map, exception) -> {
+        sensorEventConsumer.commitAsync(offsets, (map, exception) -> {
             if (exception != null) {
                 log.error("Failed to commit offsets for {} records", processedCount, exception);
             }
@@ -93,6 +98,8 @@ public class AggregationStarter {
 
     public void stop() {
         log.info("AggregationStarter::stop");
-        kafkaClient.stop();
+        sensorEventConsumer.wakeup();
+        producer.flush();
+        producer.close();
     }
 }

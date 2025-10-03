@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.analyzer.service.AnalyzerService;
 import ru.yandex.practicum.analyzer.KafkaConfig;
@@ -24,7 +23,6 @@ public class HubEventListenerImpl implements HubEventListener {
 
     private volatile boolean running = false;
 
-    @Autowired
     public HubEventListenerImpl(KafkaConfig kafkaConfig,
                                 HubEventConsumer hubEventConsumer,
                                 AnalyzerService service) {

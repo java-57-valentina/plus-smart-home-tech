@@ -4,13 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.analyzer.exception.DuplicateDeviceException;
 import ru.yandex.practicum.analyzer.model.Sensor;
 import ru.yandex.practicum.analyzer.repository.SensorRepository;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceAddedEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
-
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -29,9 +26,9 @@ public class DeviceAddedEventProcessor extends HubEventProcessorBase {
     protected void handleImpl(HubEventAvro event) {
         DeviceAddedEventAvro payload = (DeviceAddedEventAvro) event.getPayload();
 
-        Optional<Sensor> existing = sensorRepository.findById(payload.getId());
-        if (existing.isPresent()) {
-            throw new DuplicateDeviceException(payload.getId(), event.getHubId());
+        if (sensorRepository.existsById(payload.getId())) {
+            log.info("Device {} is already registered in hub {}", payload.getId(), event.getHubId());
+            return;
         }
 
         Sensor sensor = Sensor.builder()
