@@ -98,7 +98,7 @@ public class SnapshotServiceImpl implements SnapshotService {
         ProducerRecord<String, SpecificRecordBase> producerRecord = new ProducerRecord<>(
                 kafkaConfig.getProducer().getTopic(),
                 null,
-                Instant.now().toEpochMilli(),
+                snapshot.getTimestamp().toEpochMilli(),
                 hubId,
                 snapshot);
         kafkaClient.getProducer().send(producerRecord, (metadata, exception) -> {
