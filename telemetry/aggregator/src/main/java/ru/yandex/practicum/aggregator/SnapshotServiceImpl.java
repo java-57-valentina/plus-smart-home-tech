@@ -45,7 +45,7 @@ public class SnapshotServiceImpl implements SnapshotService {
             boolean updated = updateSnapshot(snapshot, event);
 
             if (updated) {
-                snapshot.setTimestamp(Instant.now());
+                snapshot.setTimestamp(event.getTimestamp());
                 log.debug("↑ Updated snapshot: {}", snapshot);
                 sendSnapshot(hubId, snapshot);
             } else {
