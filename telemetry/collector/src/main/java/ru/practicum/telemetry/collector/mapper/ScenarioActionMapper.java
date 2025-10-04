@@ -1,18 +1,24 @@
 package ru.practicum.telemetry.collector.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.telemetry.collector.model.hub.ScenarioAction;
+import ru.yandex.practicum.grpc.telemetry.event.ActionTypeProto;
+import ru.yandex.practicum.grpc.telemetry.event.DeviceActionProto;
 import ru.yandex.practicum.kafka.telemetry.event.ActionTypeAvro;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceActionAvro;
 
 @UtilityClass
 public class ScenarioActionMapper {
-    public DeviceActionAvro toAvro(ScenarioAction action) {
-        ActionTypeAvro actionType = ActionTypeAvro.valueOf(action.getType().name());
+
+    public DeviceActionAvro toAvro(DeviceActionProto action) {
+        ActionTypeAvro actionType = toAvro(action.getType());
         return DeviceActionAvro.newBuilder()
                 .setSensorId(action.getSensorId())
                 .setType(actionType)
                 .setValue(action.getValue())
                 .build();
+    }
+
+    private static ActionTypeAvro toAvro(ActionTypeProto type) {
+        return ActionTypeAvro.valueOf(type.name().replace("ACTION_", ""));
     }
 }
