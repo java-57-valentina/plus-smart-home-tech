@@ -1,13 +1,13 @@
-grpc:
-  server:
-    port: 59091
+spring:
+  application:
+    name: collector
 
-logging:
-  level:
-    ru.practicum.telemetry.collector: DEBUG
+  config:
+    import: configserver:http://localhost:8888
+  cloud:
+    config:
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
 
-kafka:
-  bootstrap-server: "localhost:9092"
-  topics:
-    sensor: "telemetry.sensors.v1"
-    hub: "telemetry.hubs.v1"
