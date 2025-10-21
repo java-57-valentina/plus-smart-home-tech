@@ -14,8 +14,14 @@ spring:
         useRandomPolicy: true
         max-interval: 6000
 
+server:
+  port: 8082
+
 eureka:
   client:
-    registerWithEureka: false
+    registerWithEureka: true
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
