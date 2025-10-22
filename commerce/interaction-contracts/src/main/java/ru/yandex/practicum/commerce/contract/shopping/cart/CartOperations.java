@@ -1,7 +1,6 @@
 package ru.yandex.practicum.commerce.contract.shopping.cart;
 
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.commerce.dto.cart.ChangeProductQuantityDto;
 import ru.yandex.practicum.commerce.dto.cart.ShoppingCartDto;
 
 import java.util.List;
@@ -23,6 +22,5 @@ public interface CartOperations {
                            @RequestBody List<String> ids);
 
     @PostMapping("/change-quantity")
-    ShoppingCartDto changeQuantity(@RequestParam String username,
-                                   @RequestBody ChangeProductQuantityDto changeQuantityDto);
+    ShoppingCartDto changeQuantity(@RequestParam String username);
 }

@@ -1,26 +1,28 @@
 package ru.yandex.practicum.commerce.contract.shopping.store;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.commerce.dto.StoreProductDto;
+
+import org.springframework.data.domain.Page;
+import java.util.UUID;
 
 public interface StoreOperations {
 
     @GetMapping
-    String get();
+    Page<StoreProductDto> get(@RequestParam StoreProductDto.ProductCategory category,
+                              @RequestParam int page,
+                              @RequestParam int size,
+                              @RequestParam String sort);
 
     @GetMapping("/{productId}")
-    String get(Long id);
+    StoreProductDto get(@PathVariable String productId);
 
     @PutMapping
-    String put();
+    StoreProductDto add(@RequestBody StoreProductDto productDto);
 
     @PostMapping
-    String post();
+    StoreProductDto update(@RequestBody StoreProductDto productDto);
 
     @PostMapping("/removeProductFromStore")
-    String remove();
-
-    @PostMapping("/quantityState")
-    String state();
+    boolean deactivate(@RequestBody String id);
 }
