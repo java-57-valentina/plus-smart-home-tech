@@ -1,11 +1,13 @@
 package ru.yandex.practicum.commerce.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class StoreProductDto {
@@ -29,18 +31,18 @@ public class StoreProductDto {
     @JsonProperty("productCategory")
     private ProductCategory category;
 
-    private Long price;
+    private Double price;
 
 
     public enum QuantityState {
-        ENDED, AVAILABLE, LOW_STOCK
+        ENDED, FEW, ENOUGH, MANY
     }
 
     public enum ProductState {
-        ACTIVE, INACTIVE, ARCHIVED
+        ACTIVE, DEACTIVATE
     }
 
     public enum ProductCategory {
-        DEVICE, ACCESSORY, SERVICE
+        CONTROL, SENSORS, LIGHTING
     }
 }

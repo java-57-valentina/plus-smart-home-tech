@@ -23,6 +23,10 @@ public interface StoreOperations {
     @PostMapping
     StoreProductDto update(@RequestBody StoreProductDto productDto);
 
+    @PostMapping("/quantityState")
+    boolean updateQuantityState(@RequestParam UUID productId,
+                                @RequestParam StoreProductDto.QuantityState quantityState);
+
     @PostMapping("/removeProductFromStore")
     boolean deactivate(@RequestBody String id);
 }
