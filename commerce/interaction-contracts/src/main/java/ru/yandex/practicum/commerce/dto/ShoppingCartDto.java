@@ -1,20 +1,22 @@
-package ru.yandex.practicum.commerce.dto.cart;
+package ru.yandex.practicum.commerce.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.commerce.dto.StoreProductDto;
 
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShoppingCartDto {
 
     @JsonProperty("shoppingCartId")
-    private String id;
+    private UUID id;
 
-    private List<StoreProductDto> products;
+    private Map<UUID, Integer> products;
 }
