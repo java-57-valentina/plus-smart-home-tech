@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseClient;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
-import ru.yandex.practicum.commerce.exception.NotEnoughProductsException;
+import ru.yandex.practicum.exception.NotEnoughProductsException;
 import ru.yandex.practicum.commerce.exception.NotFoundException;
 import ru.yandex.practicum.mapper.CartMapper;
 import ru.yandex.practicum.model.CartProduct;

@@ -1,4 +1,4 @@
 package ru.yandex.practicum.commerce.exception;
 
-public class NoProductsInShoppingCartException {
+public class NoProductsInShoppingCartException extends RuntimeException {
 }

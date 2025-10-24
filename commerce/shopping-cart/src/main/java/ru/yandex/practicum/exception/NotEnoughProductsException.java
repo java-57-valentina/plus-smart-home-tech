@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.exception;
+package ru.yandex.practicum.exception;
 
 public class NotEnoughProductsException extends RuntimeException {
 }
