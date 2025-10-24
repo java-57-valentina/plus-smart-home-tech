@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseClient;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
+import ru.yandex.practicum.commerce.exception.NoProductsInShoppingCartException;
 import ru.yandex.practicum.exception.NotEnoughProductsException;
 import ru.yandex.practicum.commerce.exception.NotFoundException;
 import ru.yandex.practicum.mapper.CartMapper;
@@ -85,7 +86,7 @@ public class CartService {
             return CartMapper.toDto(cart);
         }
 
-        CartProduct product = getOrCreateCartProduct(cart, updateQuantityDto.getProductId());
+        CartProduct product = getCartProductOrThrow(cart, updateQuantityDto.getProductId());
         if (product.getQuantity().equals(updateQuantityDto.getNewQuantity())) {
             return CartMapper.toDto(cart);
         }
@@ -104,6 +105,7 @@ public class CartService {
         cart.getProducts().removeIf(cp -> cp.getProductId() == productId);
     }
 
+
     private ShoppingCart getCartOrThrow(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Shopping cart of user", username));
@@ -113,6 +115,13 @@ public class CartService {
         Optional<ShoppingCart> shoppingCart = repository.findByUsername(username);
         return shoppingCart
                 .orElseGet(() -> repository.save(new ShoppingCart(username)));
+    }
+
+    private CartProduct getCartProductOrThrow(ShoppingCart cart, UUID productId) {
+        return cart.getProducts().stream()
+                .filter(cp -> cp.getProductId().equals(productId))
+                .findFirst()
+                .orElseThrow(NoProductsInShoppingCartException::new);
     }
 
     private CartProduct getOrCreateCartProduct(ShoppingCart cart, UUID productId) {
@@ -127,4 +136,5 @@ public class CartService {
         cart.getProducts().add(newProduct);
         return newProduct;
     }
+
 }

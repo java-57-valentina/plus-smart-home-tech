@@ -1,5 +1,6 @@
 package ru.yandex.practicum.commerce.contract.shopping.store;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.StoreProductDto;
 
@@ -18,15 +19,15 @@ public interface StoreOperations {
     StoreProductDto get(@PathVariable String productId);
 
     @PutMapping
-    StoreProductDto add(@RequestBody StoreProductDto productDto);
+    StoreProductDto add(@RequestBody @Valid StoreProductDto productDto);
 
     @PostMapping
-    StoreProductDto update(@RequestBody StoreProductDto productDto);
+    StoreProductDto update(@RequestBody @Valid StoreProductDto productDto);
 
     @PostMapping("/quantityState")
     boolean updateQuantityState(@RequestParam UUID productId,
                                 @RequestParam StoreProductDto.QuantityState quantityState);
 
     @PostMapping("/removeProductFromStore")
-    boolean deactivate(@RequestBody String id);
+    boolean deactivate(@RequestBody @Valid String id);
 }

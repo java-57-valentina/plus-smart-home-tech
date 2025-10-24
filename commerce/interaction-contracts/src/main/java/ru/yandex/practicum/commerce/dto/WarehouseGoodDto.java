@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class WarehouseGoodDto {
 
-    @NotBlank(message = "Product ID is required")
+    @NotNull
     private UUID productId;
 
     private boolean fragile;
@@ -27,6 +27,7 @@ public class WarehouseGoodDto {
     private Dimension dimension;
 
     @Positive(message = "Weight must be positive")
+    @DecimalMin(value = "1.0")
     @DecimalMax(value = "100000.0", message = "Weight cannot exceed 1000 kg")
     private double weight;
 
@@ -38,13 +39,16 @@ public class WarehouseGoodDto {
 
         @Positive(message = "Width must be positive")
         @DecimalMax(value = "1000.0", message = "Width cannot exceed 10 meters")
+        @DecimalMin(value = "1.0")
         private double width;
 
         @Positive(message = "Height must be positive")
+        @DecimalMin(value = "1.0")
         @DecimalMax(value = "1000.0", message = "Height cannot exceed 10 meters")
         private double height;
 
         @Positive(message = "Depth must be positive")
+        @DecimalMin(value = "1.0")
         @DecimalMax(value = "1000.0", message = "Depth cannot exceed 10 meters")
         private double depth;
     }

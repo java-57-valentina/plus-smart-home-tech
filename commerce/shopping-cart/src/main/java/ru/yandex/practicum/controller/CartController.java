@@ -1,5 +1,7 @@
 package ru.yandex.practicum.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -55,9 +57,9 @@ public class CartController implements CartOperations {
     }
 
     @Override
-    public ShoppingCartDto changeQuantity(@RequestParam String username,
-                                          @RequestBody UpdateQuantityRequest updateQuantityRequest) {
-        log.debug("request for changeQuantity of products in cart of user: {}", username);
+    public ShoppingCartDto changeQuantity(@RequestParam @NotBlank String username,
+                                          @RequestBody @Valid UpdateQuantityRequest updateQuantityRequest) {
+        log.debug("request for changeQuantity of products {} in {}'s cart: ", updateQuantityRequest, username);
         return cartService.changeQuantity(username, updateQuantityRequest);
     }
 

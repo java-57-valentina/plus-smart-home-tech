@@ -1,5 +1,6 @@
 package ru.yandex.practicum.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,19 +37,19 @@ public class StoreController implements StoreOperations {
     }
 
     @Override
-    public StoreProductDto add(@RequestBody StoreProductDto productDto) {
+    public StoreProductDto add(@RequestBody @Valid StoreProductDto productDto) {
         log.debug("request for add product: {}", productDto);
         return service.add(productDto);
     }
 
     @Override
-    public StoreProductDto update(@RequestBody StoreProductDto productDto) {
+    public StoreProductDto update(@RequestBody @Valid StoreProductDto productDto) {
         log.debug("request for update product: {}", productDto);
         return service.update(productDto);
     }
 
     @Override
-    public boolean deactivate(@RequestBody String id) {
+    public boolean deactivate(@RequestBody @Valid String id) {
         log.debug("request for deactivate product id: {}", id);
         return service.deactivate(id);
     }

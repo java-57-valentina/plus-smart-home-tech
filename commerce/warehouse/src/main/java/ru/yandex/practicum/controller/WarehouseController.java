@@ -1,5 +1,6 @@
 package ru.yandex.practicum.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -23,19 +24,19 @@ public class WarehouseController implements WarehouseOperations {
     private final WarehouseService warehouseService;
 
     @Override
-    public void add(@RequestBody WarehouseGoodDto goodDto) {
+    public void add(@RequestBody @Valid WarehouseGoodDto goodDto) {
         log.debug("request for add new good: {}", goodDto);
         warehouseService.add(goodDto);
     }
 
     @Override
-    public void add(@RequestBody WarehouseGoodQuantityDto request) {
+    public void add(@RequestBody @Valid WarehouseGoodQuantityDto request) {
         log.debug("request for update quantity of good id:{}", request);
         warehouseService.updateQuantity(request);
     }
 
     @Override
-    public boolean check(@RequestBody ShoppingCartDto cardRequestDto) {
+    public boolean check(@RequestBody @Valid ShoppingCartDto cardRequestDto) {
         return warehouseService.check(cardRequestDto);
     }
 
