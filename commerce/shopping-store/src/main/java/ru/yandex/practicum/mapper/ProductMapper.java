@@ -8,7 +8,6 @@ import ru.yandex.practicum.model.Product;
 public class ProductMapper {
     public Product fromDto(StoreProductDto productDto) {
         return Product.builder()
-                // .id(UUID.fromString(productDto.getId()))
                 .productName(productDto.getName())
                 .description(productDto.getDescription())
                 .price(productDto.getPrice())
