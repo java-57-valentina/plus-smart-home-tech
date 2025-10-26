@@ -2,7 +2,9 @@
 CREATE TABLE IF NOT EXISTS carts
 (
     id             UUID             PRIMARY KEY,
-    username       varchar(64)      NOT NULL UNIQUE
+    username       varchar(64)      NOT NULL UNIQUE,
+    state          varchar(11)      NOT NULL DEFAULT 'ACTIVE',
+    CONSTRAINT chk_cart_state       CHECK (state  IN ('ACTIVE', 'DEACTIVATED'))
 );
 
 CREATE TABLE IF NOT EXISTS cart_products

@@ -22,4 +22,6 @@ public class ShoppingCartDto {
 
     @NotNull
     private Map<UUID, Integer> products;
+
+    ShoppingCartState state;
 }

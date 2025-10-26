@@ -21,7 +21,7 @@ public interface CartOperations {
                         @RequestBody Map<UUID, Integer> products);
 
     @DeleteMapping
-    void delete(@RequestParam String username);
+    void deactivate(@RequestParam String username);
 
     @PostMapping("/remove")
     ShoppingCartDto remove(@RequestParam String username,

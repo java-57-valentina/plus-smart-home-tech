@@ -44,9 +44,9 @@ public class CartController implements CartOperations {
 
     // Деактивация корзины товаров для пользователя.
     @Override
-    public void delete(@RequestParam String username) {
+    public void deactivate(@RequestParam String username) {
         log.debug("request for delete shopping cart: {}", username);
-        cartService.delete(username);
+        cartService.deactivate(username);
     }
 
     // Удалить указанные товары из корзины пользователя.

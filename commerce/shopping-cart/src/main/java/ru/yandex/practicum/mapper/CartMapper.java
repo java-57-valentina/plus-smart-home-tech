@@ -12,6 +12,7 @@ public class CartMapper {
     public static ShoppingCartDto toDto(ShoppingCart cart) {
         return ShoppingCartDto.builder()
                 .id(cart.getId())
+                .state(cart.getState())
                 .products(cart.getProducts().stream()
                         .collect(Collectors.toMap(
                         CartProduct::getProductId,

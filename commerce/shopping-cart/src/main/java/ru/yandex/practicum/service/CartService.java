@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseClient;
 import ru.yandex.practicum.commerce.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
+import ru.yandex.practicum.commerce.dto.ShoppingCartState;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
 import ru.yandex.practicum.commerce.exception.NoProductsInShoppingCartException;
 import ru.yandex.practicum.commerce.exception.NotEnoughProductsException;
@@ -42,6 +43,7 @@ public class CartService {
     public ShoppingCartDto add(String username, Map<UUID, Integer> products) {
 
         ShoppingCart cart = getOrCreateCart(username);
+        checkCartState(cart);
 
         for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
             Integer quantity = entry.getValue();
@@ -56,27 +58,26 @@ public class CartService {
     }
 
     @Transactional
-    public void delete(String username) {
-        if (!repository.existsByUsername(username)) {
-            return;
-        }
-        repository.deleteByUsername(username);
+    public void deactivate(String username) {
+        ShoppingCart cart = getCartOrThrow(username);
+        cart.setState(ShoppingCartState.DEACTIVATED);
     }
 
     @Transactional
     public ShoppingCartDto remove(String username, List<UUID> ids) {
-        ShoppingCart shoppingCart = repository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Shopping cart of user", username));
+        ShoppingCart cart = getCartOrThrow(username);
+        checkCartState(cart);
 
-        shoppingCart.getProducts().removeIf(product
+        cart.getProducts().removeIf(product
                 -> ids.contains(product.getProductId()));
-        return CartMapper.toDto(shoppingCart);
+        return CartMapper.toDto(cart);
     }
 
     @Transactional
     public ShoppingCartDto changeQuantity(String username, UpdateQuantityRequest updateQuantityDto) {
 
         ShoppingCart cart = getCartOrThrow(username);
+        checkCartState(cart);
 
         if (updateQuantityDto.getNewQuantity().equals(0)) {
             removeProductById(cart, updateQuantityDto.getProductId());
@@ -98,10 +99,13 @@ public class CartService {
 
     @Transactional
     public BookedProductsDto bookingProductsFromShoppingCart(String userName) {
-        ShoppingCartDto cart = CartMapper.toDto(getCartOrThrow(userName));
+        ShoppingCart cart = getCartOrThrow(userName);
+        checkCartState(cart);
+
+        ShoppingCartDto cartDto = CartMapper.toDto(cart);
 
         try {
-            return warehouseClient.check(cart);
+            return warehouseClient.check(cartDto);
         } catch (FeignException.FeignClientException e) {
             if (e.status() == HttpStatus.CONFLICT.value()) {
                 throw new NotEnoughProductsException(e.getMessage());
@@ -109,6 +113,7 @@ public class CartService {
             throw e;
         }
     }
+
 
     private ShoppingCart getCartOrThrow(String username) {
         return repository.findByUsername(username)
@@ -139,5 +144,11 @@ public class CartService {
         CartProduct newProduct = new CartProduct(cart, productId, 0);
         cart.getProducts().add(newProduct);
         return newProduct;
+    }
+
+    private static void checkCartState(ShoppingCart cart) {
+        if (cart.getState() == ShoppingCartState.DEACTIVATED) {
+            throw new IllegalStateException("Cart is deactivated");
+        }
     }
 }
