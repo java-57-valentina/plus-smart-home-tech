@@ -14,9 +14,6 @@ spring:
         useRandomPolicy: true
         max-interval: 6000
 
-server:
-  port: 8081
-
 eureka:
   client:
     registerWithEureka: true
