@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.commerce.contract.shopping.cart.CartOperations;
+import ru.yandex.practicum.commerce.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
 import ru.yandex.practicum.service.CartService;
@@ -61,6 +62,12 @@ public class CartController implements CartOperations {
                                           @RequestBody @Valid UpdateQuantityRequest updateQuantityRequest) {
         log.debug("request for changeQuantity of products {} in {}'s cart: ", updateQuantityRequest, username);
         return cartService.changeQuantity(username, updateQuantityRequest);
+    }
+
+    @Override
+    public BookedProductsDto bookingProducts(@RequestParam @NotBlank String username) {
+        log.debug("request for booking products in shopping cart of user: {}", username);
+        return cartService.bookingProductsFromShoppingCart(username);
     }
 
 }

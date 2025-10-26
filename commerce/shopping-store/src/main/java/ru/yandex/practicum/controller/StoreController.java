@@ -32,7 +32,7 @@ public class StoreController implements StoreOperations {
 
     @Override
     public StoreProductDto get(@PathVariable String productId) {
-        log.debug("request for get list of product id: {}", productId);
+        log.debug("request for get product by id: {}", productId);
         return service.get(productId);
     }
 
@@ -57,7 +57,9 @@ public class StoreController implements StoreOperations {
     @Override
     public boolean updateQuantityState(@RequestParam UUID productId,
                                        @RequestParam StoreProductDto.QuantityState quantityState) {
-        log.debug("request for update state of product id: {}", productId);
+        log.debug("request for update quantity state of product id: {}, new state: {}",
+                productId,
+                quantityState);
         return service.updateQuantityState(productId, quantityState);
     }
 }

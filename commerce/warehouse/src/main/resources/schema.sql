@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS goods (
     height DECIMAL(10, 2) NOT NULL CHECK (height > 0),
     depth DECIMAL(10, 2) NOT NULL CHECK (depth > 0),
 
-    quantity BIGINT NOT NULL DEFAULT 0 CHECK (quantity >= 0)
+    quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0)
 );

@@ -55,6 +55,17 @@ public class ErrorHandler {
                 .build();
     }
 
+    @ExceptionHandler(NotEnoughProductsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleNotEnoughProductsException(NotEnoughProductsException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .status(HttpStatus.CONFLICT)
+                .reason("Not enough products")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgumentExceptionExceptions(IllegalArgumentException ex) {

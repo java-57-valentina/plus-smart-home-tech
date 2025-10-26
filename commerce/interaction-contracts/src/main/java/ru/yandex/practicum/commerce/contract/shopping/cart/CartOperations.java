@@ -3,6 +3,7 @@ package ru.yandex.practicum.commerce.contract.shopping.cart;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.commerce.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
 
@@ -29,4 +30,7 @@ public interface CartOperations {
     @PostMapping("/change-quantity")
     ShoppingCartDto changeQuantity(@RequestParam @NotBlank String username,
                                    @RequestBody @Valid UpdateQuantityRequest updateQuantityRequest);
+
+    @PostMapping("/book")
+    BookedProductsDto bookingProducts(@RequestParam @NotBlank String username);
 }

@@ -14,10 +14,7 @@ import ru.yandex.practicum.mapper.ProductMapper;
 import ru.yandex.practicum.model.Product;
 import ru.yandex.practicum.repository.ProductRepository;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -81,7 +78,6 @@ public class StoreService {
     @Transactional
     public StoreProductDto update(StoreProductDto productDto) {
         UUID uuid = UUID.fromString(productDto.getId().replace("\"", ""));
-        log.debug("UUID: '{}'", uuid);
         Product product = repository.findById(uuid)
                 .orElseThrow(() -> new NotFoundException("Product", uuid));
 
@@ -98,7 +94,6 @@ public class StoreService {
     @Transactional
     public boolean deactivate(String productId) {
         UUID uuid = UUID.fromString(productId.replace("\"", ""));
-        log.debug("UUID: '{}'", uuid);
         Product product = repository.findById(uuid)
                 .orElseThrow(() -> new NotFoundException("Product", uuid));
         product.setState(StoreProductDto.ProductState.DEACTIVATE);
@@ -107,7 +102,6 @@ public class StoreService {
 
     @Transactional
     public boolean updateQuantityState(UUID productId, StoreProductDto.QuantityState quantityState) {
-        log.debug("UUID: '{}'", productId);
         Product product = repository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product", productId));
         product.setQuantityState(quantityState);

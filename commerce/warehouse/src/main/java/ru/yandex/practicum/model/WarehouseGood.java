@@ -30,5 +30,5 @@ public class WarehouseGood {
     private double height;
     private double depth;
 
-    private long quantity;
+    private int quantity;
 }

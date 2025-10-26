@@ -1,14 +1,17 @@
 package ru.yandex.practicum.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseClient;
+import ru.yandex.practicum.commerce.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
 import ru.yandex.practicum.commerce.exception.NoProductsInShoppingCartException;
-import ru.yandex.practicum.exception.NotEnoughProductsException;
+import ru.yandex.practicum.commerce.exception.NotEnoughProductsException;
 import ru.yandex.practicum.commerce.exception.NotFoundException;
 import ru.yandex.practicum.mapper.CartMapper;
 import ru.yandex.practicum.model.CartProduct;
@@ -49,13 +52,7 @@ public class CartService {
             product.setQuantity(product.getQuantity() + quantity);
         }
 
-        ShoppingCartDto cartDto = CartMapper.toDto(cart);
-
-        boolean check = warehouseClient.check(cartDto);
-        if (!check)
-            throw new NotEnoughProductsException();
-
-        return cartDto;
+        return CartMapper.toDto(cart);
     }
 
     @Transactional
@@ -92,19 +89,26 @@ public class CartService {
         }
 
         product.setQuantity(updateQuantityDto.getNewQuantity());
-        ShoppingCartDto cartDto = CartMapper.toDto(cart);
-
-        boolean check = warehouseClient.check(cartDto);
-        if (!check)
-            throw new NotEnoughProductsException();
-
-        return cartDto;
+        return CartMapper.toDto(cart);
     }
 
     private static void removeProductById(ShoppingCart cart, UUID productId) {
         cart.getProducts().removeIf(cp -> cp.getProductId() == productId);
     }
 
+    @Transactional
+    public BookedProductsDto bookingProductsFromShoppingCart(String userName) {
+        ShoppingCartDto cart = CartMapper.toDto(getCartOrThrow(userName));
+
+        try {
+            return warehouseClient.check(cart);
+        } catch (FeignException.FeignClientException e) {
+            if (e.status() == HttpStatus.CONFLICT.value()) {
+                throw new NotEnoughProductsException(e.getMessage());
+            }
+            throw e;
+        }
+    }
 
     private ShoppingCart getCartOrThrow(String username) {
         return repository.findByUsername(username)
@@ -136,5 +140,4 @@ public class CartService {
         cart.getProducts().add(newProduct);
         return newProduct;
     }
-
 }

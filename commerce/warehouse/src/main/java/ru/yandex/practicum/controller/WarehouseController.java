@@ -8,10 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
-import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
-import ru.yandex.practicum.commerce.dto.WarehouseAddressDto;
-import ru.yandex.practicum.commerce.dto.WarehouseGoodDto;
-import ru.yandex.practicum.commerce.dto.WarehouseGoodQuantityDto;
+import ru.yandex.practicum.commerce.dto.*;
 import ru.yandex.practicum.service.WarehouseService;
 
 @Slf4j
@@ -36,12 +33,14 @@ public class WarehouseController implements WarehouseOperations {
     }
 
     @Override
-    public boolean check(@RequestBody @Valid ShoppingCartDto cardRequestDto) {
+    public BookedProductsDto check(@RequestBody @Valid ShoppingCartDto cardRequestDto) {
+        log.debug("request for check cart: {}", cardRequestDto);
         return warehouseService.check(cardRequestDto);
     }
 
     @Override
     public WarehouseAddressDto getAddress() {
+        log.debug("request for get address");
         return warehouseService.getAddress();
     }
 }
