@@ -1,6 +1,7 @@
 package ru.yandex.practicum.commerce.contract.shopping.store;
 
 import jakarta.validation.Valid;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.StoreProductDto;
 
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
+@FeignClient(name = "shopping-store", path = "/api/v1/shopping-store")
 public interface StoreOperations {
 
     @GetMapping

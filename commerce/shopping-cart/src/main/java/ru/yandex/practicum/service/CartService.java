@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.commerce.contract.warehouse.WarehouseClient;
+import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
 import ru.yandex.practicum.commerce.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartState;
@@ -30,7 +30,7 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class CartService {
     private final CardRepository repository;
-    private final WarehouseClient warehouseClient;
+    private final WarehouseOperations warehouseClient;
 
     public ShoppingCartDto get(String username) {
         ShoppingCart shoppingCart = repository.findByUsername(username)

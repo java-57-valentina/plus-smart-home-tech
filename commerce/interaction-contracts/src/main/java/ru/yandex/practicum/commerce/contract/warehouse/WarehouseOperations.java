@@ -2,9 +2,11 @@ package ru.yandex.practicum.commerce.contract.warehouse;
 
 import feign.FeignException;
 import jakarta.validation.Valid;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.*;
 
+@FeignClient(name = "warehouse", path = "/api/v1/warehouse")
 public interface WarehouseOperations {
 
     // Добавить новый товар на склад.
