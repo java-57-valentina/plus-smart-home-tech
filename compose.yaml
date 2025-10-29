@@ -38,7 +38,7 @@ services:
     image: postgres:16.1
     container_name: postgres-analyzer-db
     ports:
-      - "5434:5432"  # Внутри 5432, снаружи 5434
+      - "5433:5432"  # Внутри 5432, снаружи 5433
     environment:
       - POSTGRES_DB=analyzerdb
       - POSTGRES_USER=dbuser
@@ -49,3 +49,19 @@ services:
       interval: 5s
       retries: 10
 
+  commerce-db:
+    image: postgres:16.1
+    container_name: postgres-commerce-db
+    ports:
+      - "5434:5432"  # Внутри 5432, снаружи 5434
+    volumes:
+      - ./init-commerce-databases.sql:/docker-entrypoint-initdb.d/init-commerce-databases.sql
+    environment:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres  # ← Добавлено для healthcheck
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -u $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
