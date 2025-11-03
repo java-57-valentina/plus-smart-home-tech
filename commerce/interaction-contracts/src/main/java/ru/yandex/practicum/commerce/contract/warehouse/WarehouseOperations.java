@@ -23,5 +23,10 @@ public interface WarehouseOperations {
 
     // Предоставить адрес склада для расчёта доставки.
     @GetMapping("/address")
-    WarehouseAddressDto getAddress();
+
+    AddressDto getAddress();
+
+    @PostMapping("/return")
+    void returnItems(@RequestParam @NotNull UUID orderId,
+                     @RequestBody Map<UUID, Integer> products);
 }

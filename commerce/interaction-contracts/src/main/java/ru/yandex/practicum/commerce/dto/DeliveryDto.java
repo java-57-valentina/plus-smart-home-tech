@@ -5,14 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeliveryAddress {
-    private String country;
-    private String city;
-    private String street;
-    private String house;
-    private String flat;
+public class DeliveryDto {
+    private UUID deliveryId;
+    private UUID orderId;
+    private AddressDto fromAddress;
+    private AddressDto toAddress;
+    private DeliveryState state;
 }

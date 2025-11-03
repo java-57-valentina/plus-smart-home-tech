@@ -39,7 +39,7 @@ public class WarehouseController implements WarehouseOperations {
     }
 
     @Override
-    public WarehouseAddressDto getAddress() {
+    public AddressDto getAddress() {
         log.debug("request for get address");
         return warehouseService.getAddress();
     }

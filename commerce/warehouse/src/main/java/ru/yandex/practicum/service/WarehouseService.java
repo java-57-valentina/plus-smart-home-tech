@@ -46,8 +46,8 @@ public class WarehouseService {
         log.debug("updated quantity of good {}", product);
     }
 
-    public WarehouseAddressDto getAddress() {
-        return WarehouseAddressDto.builder()
+    public AddressDto getAddress() {
+        return AddressDto.builder()
                 .country(CURRENT_ADDRESS)
                 .city(CURRENT_ADDRESS)
                 .street(CURRENT_ADDRESS)
