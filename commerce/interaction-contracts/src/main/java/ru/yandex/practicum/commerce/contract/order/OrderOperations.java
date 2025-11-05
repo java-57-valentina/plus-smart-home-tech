@@ -17,11 +17,14 @@ public interface OrderOperations {
     @GetMapping
     Page<OrderDto> getUserOrders(@RequestParam @NotBlank String username);
 
+    @GetMapping("/{id}")
+    OrderDto getOrder(@PathVariable UUID id);
+
     @PutMapping
     OrderDto createOrder(@RequestBody NewOrderDto request);
 
     @PostMapping("/return")
-    PaymentDto returnOrder(@RequestBody ReturnOrderDto request);
+    OrderDto returnOrder(@RequestBody ReturnOrderDto request);
 
     @PostMapping("/payment")
     PaymentDto processPayment(@RequestBody UUID orderId);
@@ -30,7 +33,7 @@ public interface OrderOperations {
     PaymentDto processFailedPayment(@RequestBody UUID orderId);
 
     @PostMapping("/delivery")
-    PaymentDto processDelivery(@RequestBody UUID orderId);
+    OrderDto delivery(@RequestBody UUID orderId);
 
     @PostMapping("/delivery/failed")
     PaymentDto processFailedDelivery(@RequestBody UUID orderId);
@@ -45,7 +48,7 @@ public interface OrderOperations {
     PaymentDto calculateDelivery(@RequestBody UUID orderId);
 
     @PostMapping("/assembly")
-    PaymentDto assembleOrder(@RequestBody UUID orderId);
+    OrderDto assembleOrder(@RequestBody UUID orderId);
 
     @PostMapping("/assembly/failed")
     PaymentDto processFailedAssembly(@RequestBody UUID orderId);

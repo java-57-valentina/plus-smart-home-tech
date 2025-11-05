@@ -11,6 +11,7 @@ import ru.yandex.practicum.commerce.dto.NewOrderDto;
 import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.commerce.dto.PaymentDto;
 import ru.yandex.practicum.commerce.dto.ReturnOrderDto;
+import ru.yandex.practicum.service.OrderService;
 
 import java.util.UUID;
 
@@ -20,75 +21,87 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/order")
 public class OrderController implements OrderOperations {
+
+    private final OrderService service;
+
+    // TODO: добавить параметры пагинации
     @Override
     public Page<OrderDto> getUserOrders(String username) {
         log.debug("request for get orders of user: {}", username);
-        return null;
+        return service.getOrders(username);
+    }
+
+    @Override
+    public OrderDto getOrder(UUID id) {
+        log.debug("request for get order by id: {}", id);
+        return service.getOrderById(id);
     }
 
     @Override
     public OrderDto createOrder(NewOrderDto request) {
         log.debug("request for create order: {}", request);
-        return null;
+        OrderDto created = service.createOrder(request);
+        log.debug("return created order: {}", created);
+        return created;
     }
 
     @Override
-    public PaymentDto returnOrder(ReturnOrderDto request) {
+    public OrderDto returnOrder(ReturnOrderDto request) {
         log.debug("request for return order: {}", request);
-        return null;
+        return service.returnOrder(request);
     }
 
     @Override
     public PaymentDto processPayment(UUID orderId) {
         log.debug("request for process payment: {}", orderId);
-        return null;
+        return service.processPayment(orderId);
     }
 
     @Override
     public PaymentDto processFailedPayment(UUID orderId) {
         log.debug("request handle failed payment: {}", orderId);
-        return null;
+        return service.processFailedPayment(orderId);
     }
 
     @Override
-    public PaymentDto processDelivery(UUID orderId) {
+    public OrderDto delivery(UUID orderId) {
         log.debug("request for process delivery: {}", orderId);
-        return null;
+        return service.delivery(orderId);
     }
 
     @Override
     public PaymentDto processFailedDelivery(UUID orderId) {
         log.debug("request handle failed delivery: {}", orderId);
-        return null;
+        return service.processFailedDelivery(orderId);
     }
 
     @Override
     public PaymentDto completeOrder(UUID orderId) {
         log.debug("request for complete order: {}", orderId);
-        return null;
+        return service.completeOrder(orderId);
     }
 
     @Override
     public PaymentDto calculateTotal(UUID orderId) {
         log.debug("request for calculate total: {}", orderId);
-        return null;
+        return service.calculateTotal(orderId);
     }
 
     @Override
     public PaymentDto calculateDelivery(UUID orderId) {
         log.debug("request for calculate delivery: {}", orderId);
-        return null;
+        return service.calculateDelivery(orderId);
     }
 
     @Override
-    public PaymentDto assembleOrder(UUID orderId) {
+    public OrderDto assembleOrder(UUID orderId) {
         log.debug("request for assemble order: {}", orderId);
-        return null;
+        return service.assemblyOrder(orderId);
     }
 
     @Override
     public PaymentDto processFailedAssembly(UUID orderId) {
-        log.debug("request handle failed assemble: {}", orderId);
+        log.debug("STUB: request handle failed assemble: {}", orderId);
         return null;
     }
 }

@@ -10,7 +10,7 @@ public enum OrderState {
     ON_DELIVERY,        // ожидает доставки;
     DELIVERED,          // доставлен;
     DELIVERY_FAILED,    // неудачная доставка;
-    PRODUCT_RETURNED,   // возврат товаров;
+    // PRODUCT_RETURNED,   // возврат товаров;
     COMPLETED,          // завершён;
     DONE,               // выполнен;
     CANCELED            // отменён.

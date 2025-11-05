@@ -10,5 +10,5 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ReturnOrderDto {
     private UUID orderId;
-    private Map<String, Integer> products;
+    private Map<UUID, Integer> products;
 }
