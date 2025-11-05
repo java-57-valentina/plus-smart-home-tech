@@ -11,6 +11,9 @@ import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
 import ru.yandex.practicum.commerce.dto.*;
 import ru.yandex.practicum.service.WarehouseService;
 
+import java.util.Map;
+import java.util.UUID;
+
 @Slf4j
 @Validated
 @RestController
@@ -35,12 +38,34 @@ public class WarehouseController implements WarehouseOperations {
     @Override
     public BookedProductsDto check(@RequestBody @Valid ShoppingCartDto cardRequestDto) {
         log.debug("request for check cart: {}", cardRequestDto);
-        return warehouseService.check(cardRequestDto);
+        return warehouseService.check(cardRequestDto.getProducts());
+    }
+
+    private BookedProductsDto reserve(ShoppingCartDto shoppingCartDto) {
+        log.debug("request for reserve products: {}", shoppingCartDto.getProducts());
+        return warehouseService.check(shoppingCartDto.getProducts());
+    }
+
+    private void cancelReservation(ShoppingCartDto shoppingCartDto) {
+        log.debug("request for cancel reservation");
+        warehouseService.cancelReservation(shoppingCartDto);
+    }
+
+    @Override
+    public void assemblyProducts(UUID orderId, Map<UUID, Integer> products) {
+        log.debug("request for assembly products {} for order {}", products, orderId);
+        warehouseService.assemblyProducts(orderId, products);
     }
 
     @Override
     public AddressDto getAddress() {
         log.debug("request for get address");
         return warehouseService.getAddress();
+    }
+
+    @Override
+    public void returnItems(UUID orderId, Map<UUID, Integer> products) {
+        log.debug("TODO: return items {} from order id:{}", products, orderId);
+        warehouseService.returnItems(orderId, products);
     }
 }

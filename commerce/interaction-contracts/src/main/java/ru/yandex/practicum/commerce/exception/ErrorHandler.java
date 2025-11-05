@@ -87,4 +87,15 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(NoProductsInShoppingCartException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleNoProductsInShoppingCartException(NoProductsInShoppingCartException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .reason("NoProductsInShoppingCart")
+                .status(HttpStatus.CONFLICT)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

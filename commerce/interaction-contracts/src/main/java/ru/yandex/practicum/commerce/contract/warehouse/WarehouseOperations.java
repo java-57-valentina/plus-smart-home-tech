@@ -2,9 +2,13 @@ package ru.yandex.practicum.commerce.contract.warehouse;
 
 import feign.FeignException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @FeignClient(name = "warehouse", path = "/api/v1/warehouse")
 public interface WarehouseOperations {
@@ -20,6 +24,10 @@ public interface WarehouseOperations {
     // Предварительно проверить что количество товаров на складе достаточно для данной корзиный продуктов.
     @PostMapping
     BookedProductsDto check(@RequestBody @Valid ShoppingCartDto productDto) throws FeignException;
+
+    @PostMapping("/assembly")
+    void assemblyProducts(@RequestParam @NotNull UUID orderId,
+                          @RequestBody Map<UUID, Integer> products);
 
     // Предоставить адрес склада для расчёта доставки.
     @GetMapping("/address")

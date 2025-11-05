@@ -39,9 +39,7 @@ public class WarehouseService {
 
     @Transactional
     public void updateQuantity(WarehouseGoodQuantityDto request) {
-        WarehouseGood product = repository
-                .findById(request.getProductId())
-                .orElseThrow(() -> new NotFoundException("Product", request.getProductId()));
+        WarehouseGood product = getProduct(request.getProductId());
         product.setQuantity(request.getQuantity());
         log.debug("updated quantity of good {}", product);
     }
@@ -56,21 +54,22 @@ public class WarehouseService {
                 .build();
     }
 
-    public BookedProductsDto check(ShoppingCartDto cartRequestDto) {
-        Map<UUID, Integer> cartProducts = cartRequestDto.getProducts();
-        if (cartProducts.isEmpty()) {
-            log.debug("Shopping cart is empty, nothing to check");
+    @Transactional
+    public BookedProductsDto check(Map<UUID, Integer> products) {
+        log.debug("check goods: {}", products);
+        if (products.isEmpty()) {
+            log.debug("Nothing to check");
             return new BookedProductsDto();
         }
 
-        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllByProductIdIn(cartProducts.keySet()).stream()
+        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllByProductIdIn(products.keySet()).stream()
                 .collect(Collectors.toMap(WarehouseGood::getProductId, Function.identity()));
 
-        if (cartProducts.size() > warehouseGoods.size()) {
-            Set<UUID> undefinedGoods = cartProducts.keySet().stream()
+        if (products.size() > warehouseGoods.size()) {
+            Set<UUID> undefinedGoods = products.keySet().stream()
                     .filter(prodId -> !warehouseGoods.containsKey(prodId))
                     .collect(Collectors.toSet());
-            log.debug("There are {} undefined products in shopping cart: {}", undefinedGoods.size(), undefinedGoods);
+            log.error("There are {} undefined products in shopping cart: {}", undefinedGoods.size(), undefinedGoods);
             throw new NotFoundException("Products", undefinedGoods);
         }
 
@@ -78,14 +77,15 @@ public class WarehouseService {
         double volume = 0.0;
         boolean fragile  = false;
 
-        for (Map.Entry<UUID, Integer> cartProduct : cartProducts.entrySet()) {
-            WarehouseGood product = warehouseGoods.get(cartProduct.getKey());
-            if (cartProduct.getValue() > product.getQuantity()) {
-                throw new NotEnoughProductsException(product.getProductId(), cartProduct.getValue(), product.getQuantity());
+        for (Map.Entry<UUID, Integer> cartProduct : products.entrySet()) {
+            WarehouseGood good = warehouseGoods.get(cartProduct.getKey());
+            if (cartProduct.getValue() > good.getAvailable()) {
+                throw new NotEnoughProductsException(good.getProductId(), cartProduct.getValue(), good.getAvailable());
             }
-            weight += product.getWeight() * cartProduct.getValue();
-            volume += product.getHeight() * product.getWeight() * product.getDepth() * cartProduct.getValue();
-            fragile |= product.isFragile();
+            // good.setReserved(good.getReserved() + cartProduct.getValue());
+            weight += good.getWeight() * cartProduct.getValue();
+            volume += good.getHeight() * good.getWeight() * good.getDepth() * cartProduct.getValue();
+            fragile |= good.isFragile();
         }
 
         BookedProductsDto bookedProductsDto = new BookedProductsDto();
@@ -93,5 +93,110 @@ public class WarehouseService {
         bookedProductsDto.setDeliveryWeight(weight);
         bookedProductsDto.setDeliveryVolume(volume);
         return bookedProductsDto;
+    }
+
+    @Transactional
+    public void cancelReservation(ShoppingCartDto shoppingCartDto) {
+        log.debug("TODO: cancel reservation {}", shoppingCartDto.getProducts());
+    }
+
+    @Transactional
+    public BookedProductsDto assemblyProducts(UUID orderId, Map<UUID, Integer> products) {
+        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllById(products.keySet()).stream()
+                .collect(Collectors.toMap(
+                        WarehouseGood::getProductId,
+                        Function.identity()));
+
+        log.debug("assembly goods: {}", products);
+        if (products.isEmpty()) {
+            log.debug("Nothing to assembly");
+            return new BookedProductsDto();
+        }
+
+//        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllByProductIdIn(products.keySet()).stream()
+//                .collect(Collectors.toMap(WarehouseGood::getProductId, Function.identity()));
+
+        BookedProductsDto bookedProductsDto = getBookedProductsDto(products, warehouseGoods);
+
+        for (WarehouseGood warehouseGood : warehouseGoods.values()) {
+            int quantity = warehouseGood.getQuantity();
+            int needed = products.get(warehouseGood.getProductId());
+            log.debug("change quantity of {}: ({} -> {})", warehouseGood.getProductId(), quantity, quantity - needed);
+            warehouseGood.setQuantity(quantity - needed);
+            // updateQuantityInShoppingStore!
+        }
+
+        // good.setReserved(good.getReserved() + cartProduct.getValue());
+
+
+        return bookedProductsDto;
+
+
+
+
+
+
+//        orderClient.assembly(request.getOrderId());
+//
+//        BookedProductsDto bookedProductsParams = calculateDeliveryParams(streamSupplier);
+//        products.forEach((key, value) -> {
+//            WarehouseProduct product = getWarehouseProduct(key);
+//            int oldQuantity = product.getQuantity();
+//            int decreasingQuantity = value;
+//            product.setQuantity(oldQuantity - decreasingQuantity);
+//            warehouseRepository.save(product);
+//            updateQuantityInShoppingStore(product);
+//        });
+//        OrderBooking orderBooking = orderBookingMapper.mapToOrderBooking(bookedProductsParams, request);
+//        orderBooking = orderBookingRepository.save(orderBooking);
+//        return orderBookingMapper.mapToBookingDto(orderBooking);
+    }
+
+    private BookedProductsDto getBookedProductsDto(Map<UUID, Integer> products, Map<UUID, WarehouseGood> warehouseGoods) {
+
+        log.debug("getBookedProductsDto");
+
+        double weight = 0.0;
+        double volume = 0.0;
+        boolean fragile  = false;
+
+        for (Map.Entry<UUID, Integer> cartProduct : products.entrySet()) {
+            UUID productId = cartProduct.getKey();
+            if (!warehouseGoods.containsKey(productId)) {
+                throw new NotFoundException("Product", productId);
+            }
+            WarehouseGood good = warehouseGoods.get(productId);
+            if (cartProduct.getValue() > good.getAvailable()) {
+                throw new NotEnoughProductsException(good.getProductId(), cartProduct.getValue(), good.getAvailable());
+            }
+            weight += good.getWeight() * cartProduct.getValue();
+            volume += good.getHeight() * good.getWeight() * good.getDepth() * cartProduct.getValue();
+            fragile |= good.isFragile();
+        }
+
+        BookedProductsDto bookedProductsDto = new BookedProductsDto();
+        bookedProductsDto.setFragile(fragile);
+        bookedProductsDto.setDeliveryWeight(weight);
+        bookedProductsDto.setDeliveryVolume(volume);
+
+        return bookedProductsDto;
+    }
+
+    @Transactional
+    public void returnItems(UUID orderId, Map<UUID, Integer> products) {
+        log.debug("returnItems: {}", products);
+        products.forEach(this::increaseQuantity);
+    }
+
+    private WarehouseGood getProduct(UUID productId) {
+        return repository
+                .findById(productId)
+                .orElseThrow(() -> new NotFoundException("Product", productId));
+    }
+
+    private void increaseQuantity(UUID productId, Integer increaseValue) {
+        WarehouseGood product = getProduct(productId);
+        product.setQuantity(product.getQuantity() + increaseValue);
+        log.debug("updated quantity of good {} (+{})", product, increaseValue);
     }
 }
