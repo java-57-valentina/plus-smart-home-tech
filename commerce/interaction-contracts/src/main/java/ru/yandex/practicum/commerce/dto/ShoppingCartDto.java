@@ -2,10 +2,7 @@ package ru.yandex.practicum.commerce.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +17,10 @@ public class ShoppingCartDto {
     @JsonProperty("shoppingCartId")
     private UUID id;
 
+    private String username;
+
     @NotNull
+    @ToString.Exclude
     private Map<UUID, Integer> products;
 
     ShoppingCartState state;
