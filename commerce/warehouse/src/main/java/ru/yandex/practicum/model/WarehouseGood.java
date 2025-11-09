@@ -31,9 +31,4 @@ public class WarehouseGood {
     private double depth;
 
     private int quantity;
-    private int reserved;
-
-    public int getAvailable() {
-        return quantity - reserved;
-    }
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.contract.shopping.store.StoreOperations;
 import ru.yandex.practicum.commerce.dto.*;
 import ru.yandex.practicum.commerce.exception.NotEnoughProductsException;
 import ru.yandex.practicum.commerce.exception.NotFoundException;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class WarehouseService {
 
     private final WarehouseRepository repository;
+    private final StoreOperations storeClient;
 
     private static final String[] ADDRESSES =
             new String[] {"ADDRESS_1", "ADDRESS_2"};
@@ -30,18 +32,30 @@ public class WarehouseService {
     private static final String CURRENT_ADDRESS =
             ADDRESSES[Random.from(new SecureRandom()).nextInt(0, ADDRESSES.length)];
 
+    public WarehouseGoodDtoOut get(UUID productId) {
+        return GoodsMapper.toDto(getWarehouseGood(productId));
+    }
+
+    public Collection<WarehouseGoodDtoOut> getAll() {
+        return repository.findAll().stream()
+                .map(GoodsMapper::toDto)
+                .toList();
+    }
+
     @Transactional
-    public void add(WarehouseGoodDto goodDto) {
+    public void add(WarehouseGoodDtoIn goodDto) {
         WarehouseGood good = GoodsMapper.fromDto(goodDto);
         WarehouseGood saved = repository.save(good);
+        updateQuantityStateInStore(saved);
         log.debug("saved good to store {}", saved);
     }
 
     @Transactional
     public void updateQuantity(WarehouseGoodQuantityDto request) {
-        WarehouseGood product = getProduct(request.getProductId());
-        product.setQuantity(request.getQuantity());
-        log.debug("updated quantity of good {}", product);
+        WarehouseGood good = getWarehouseGood(request.getProductId());
+        good.setQuantity(request.getQuantity());
+        updateQuantityStateInStore(good);
+        log.debug("updated quantity of good {}", good);
     }
 
     public AddressDto getAddress() {
@@ -54,7 +68,6 @@ public class WarehouseService {
                 .build();
     }
 
-    @Transactional
     public BookedProductsDto check(Map<UUID, Integer> products) {
         log.debug("check goods: {}", products);
         if (products.isEmpty()) {
@@ -79,10 +92,9 @@ public class WarehouseService {
 
         for (Map.Entry<UUID, Integer> cartProduct : products.entrySet()) {
             WarehouseGood good = warehouseGoods.get(cartProduct.getKey());
-            if (cartProduct.getValue() > good.getAvailable()) {
-                throw new NotEnoughProductsException(good.getProductId(), cartProduct.getValue(), good.getAvailable());
+            if (cartProduct.getValue() > good.getQuantity()) {
+                throw new NotEnoughProductsException(good.getProductId(), cartProduct.getValue(), good.getQuantity());
             }
-            // good.setReserved(good.getReserved() + cartProduct.getValue());
             weight += good.getWeight() * cartProduct.getValue();
             volume += good.getHeight() * good.getWeight() * good.getDepth() * cartProduct.getValue();
             fragile |= good.isFragile();
@@ -93,11 +105,6 @@ public class WarehouseService {
         bookedProductsDto.setDeliveryWeight(weight);
         bookedProductsDto.setDeliveryVolume(volume);
         return bookedProductsDto;
-    }
-
-    @Transactional
-    public void cancelReservation(ShoppingCartDto shoppingCartDto) {
-        log.debug("TODO: cancel reservation {}", shoppingCartDto.getProducts());
     }
 
     @Transactional
@@ -123,17 +130,10 @@ public class WarehouseService {
             int needed = products.get(warehouseGood.getProductId());
             log.debug("change quantity of {}: ({} -> {})", warehouseGood.getProductId(), quantity, quantity - needed);
             warehouseGood.setQuantity(quantity - needed);
-            // updateQuantityInShoppingStore!
+            updateQuantityStateInStore(warehouseGood);
         }
 
-        // good.setReserved(good.getReserved() + cartProduct.getValue());
-
-
         return bookedProductsDto;
-
-
-
-
 
 
 //        orderClient.assembly(request.getOrderId());
@@ -152,7 +152,43 @@ public class WarehouseService {
 //        return orderBookingMapper.mapToBookingDto(orderBooking);
     }
 
-    private BookedProductsDto getBookedProductsDto(Map<UUID, Integer> products, Map<UUID, WarehouseGood> warehouseGoods) {
+
+    @Transactional
+    public void returnItems(UUID orderId, Map<UUID, Integer> products) {
+        log.debug("returnItems: {}", products);
+        products.forEach(this::increaseQuantity);
+    }
+
+    private WarehouseGood getWarehouseGood(UUID productId) {
+        return repository
+                .findById(productId)
+                .orElseThrow(() -> new NotFoundException("Product", productId));
+    }
+
+    private void increaseQuantity(UUID productId, Integer increaseValue) {
+        WarehouseGood good = getWarehouseGood(productId);
+        good.setQuantity(good.getQuantity() + increaseValue);
+        updateQuantityStateInStore(good);
+        log.debug("updated quantity of good {} (+{})", good, increaseValue);
+    }
+
+    private void updateQuantityStateInStore(WarehouseGood good) {
+        StoreProductDto.QuantityState state;
+
+        if (good.getQuantity() == 0)
+            state = StoreProductDto.QuantityState.ENDED;
+        else if (good.getQuantity() < 10)
+            state = StoreProductDto.QuantityState.FEW;
+        else if (good.getQuantity() < 100)
+            state = StoreProductDto.QuantityState.ENOUGH;
+        else
+            state = StoreProductDto.QuantityState.MANY;
+
+        storeClient.updateQuantityState(good.getProductId(), state);
+    }
+
+    private BookedProductsDto getBookedProductsDto(Map<UUID, Integer> products,
+                                                   Map<UUID, WarehouseGood> warehouseGoods) {
 
         log.debug("getBookedProductsDto");
 
@@ -166,8 +202,8 @@ public class WarehouseService {
                 throw new NotFoundException("Product", productId);
             }
             WarehouseGood good = warehouseGoods.get(productId);
-            if (cartProduct.getValue() > good.getAvailable()) {
-                throw new NotEnoughProductsException(good.getProductId(), cartProduct.getValue(), good.getAvailable());
+            if (cartProduct.getValue() > good.getQuantity()) {
+                throw new NotEnoughProductsException(good.getProductId(), cartProduct.getValue(), good.getQuantity());
             }
             weight += good.getWeight() * cartProduct.getValue();
             volume += good.getHeight() * good.getWeight() * good.getDepth() * cartProduct.getValue();
@@ -180,23 +216,5 @@ public class WarehouseService {
         bookedProductsDto.setDeliveryVolume(volume);
 
         return bookedProductsDto;
-    }
-
-    @Transactional
-    public void returnItems(UUID orderId, Map<UUID, Integer> products) {
-        log.debug("returnItems: {}", products);
-        products.forEach(this::increaseQuantity);
-    }
-
-    private WarehouseGood getProduct(UUID productId) {
-        return repository
-                .findById(productId)
-                .orElseThrow(() -> new NotFoundException("Product", productId));
-    }
-
-    private void increaseQuantity(UUID productId, Integer increaseValue) {
-        WarehouseGood product = getProduct(productId);
-        product.setQuantity(product.getQuantity() + increaseValue);
-        log.debug("updated quantity of good {} (+{})", product, increaseValue);
     }
 }
