@@ -19,7 +19,7 @@ public class OrderDto {
     private UUID cartId;
     private String username;
 
-    // private UUID deliveryId;
+    private UUID deliveryId;
     // private UUID paymentId;
     private double volume; // объём товаров;
     private double weight; // вес товаров;

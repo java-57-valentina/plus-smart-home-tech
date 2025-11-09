@@ -28,11 +28,14 @@ public class Order {
 
     private String username;
 
-    @Enumerated(EnumType.STRING)
-    private OrderState state;
+    @Column(name = "delivery_id")
+    private UUID deliveryId;
 
     @Column(name = "cart_id")
     private UUID cartId;
+
+    @Enumerated(EnumType.STRING)
+    private OrderState state;
 
     private boolean fragile;
     private double weight;

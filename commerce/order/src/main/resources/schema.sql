@@ -1,5 +1,5 @@
--- DROP TABLE order_products;
--- DROP TABLE orders;
+--DROP TABLE IF EXISTS order_products;
+--DROP TABLE IF EXISTS orders;
 
 CREATE TABLE IF NOT EXISTS orders
 (
@@ -7,12 +7,13 @@ CREATE TABLE IF NOT EXISTS orders
     username        VARCHAR(64)     NOT NULL,
     state           VARCHAR(16)     NOT NULL,
     cart_id         UUID            NOT NULL,
+    delivery_id     UUID,
 
     fragile         BOOLEAN         NOT NULL DEFAULT FALSE,
     weight          DECIMAL(10, 2)  NOT NULL CHECK (weight > 0),
     volume          DECIMAL(10, 2)  NOT NULL CHECK (volume > 0),
 
-    products_price  DECIMAL(10, 2)  NOT NULL CHECK (products_price > 0),
+    products_price  DECIMAL(10, 2)  NOT NULL, -- CHECK (products_price > 0),
 
     created_at      TIMESTAMP       NOT NULL,
 
@@ -21,7 +22,7 @@ CREATE TABLE IF NOT EXISTS orders
         'ON_PAYMENT', 'PAID', 'PAYMENT_FAILED',
         'ASSEMBLED', 'ASSEMBLY_FAILED',
         'ON_DELIVERY', 'DELIVERED', 'DELIVERY_FAILED',
-        'PRODUCT_RETURNED', 'COMPLETED', 'DONE', 'CANCELED' ))
+        'COMPLETED', 'DONE', 'CANCELED' ))
 );
 
 CREATE TABLE IF NOT EXISTS order_products (

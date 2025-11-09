@@ -10,18 +10,25 @@ import java.util.UUID;
 @FeignClient(name = "delivery", path = "/api/v1/delivery")
 public interface DeliveryOperations {
 
+    @GetMapping("/{id}")
+    DeliveryDto getById(@PathVariable UUID id);
+
     @PutMapping
     DeliveryDto delivery(@RequestBody DeliveryDto deliveryDto);
 
-    @PostMapping("/successful")
-    void deliverySuccessful(@RequestBody UUID orderId);
-
+    // Эмуляция получения товара в доставку
     @PostMapping("/picked")
-    void deliveryPicked(@RequestBody UUID orderId);
+    void deliveryPicked(@RequestBody UUID deliveryId);
 
+    // Эмуляция успешной доставки товара
+    @PostMapping("/successful")
+    void deliverySuccessful(@RequestBody UUID deliveryId);
+
+    // Эмуляция неудачного вручения товара
     @PostMapping("/failed")
-    void deliveryFailed(@RequestBody UUID orderId);
+    void deliveryFailed(@RequestBody UUID deliveryId);
 
+    // Расчёт полной стоимости доставки заказа
     @PostMapping("/cost")
     double deliveryCost(@RequestBody OrderDto orderDto);
 }

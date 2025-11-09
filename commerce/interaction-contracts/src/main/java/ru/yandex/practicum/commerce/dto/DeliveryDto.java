@@ -16,5 +16,8 @@ public class DeliveryDto {
     private UUID orderId;
     private AddressDto fromAddress;
     private AddressDto toAddress;
+    private boolean isFragile;
+    private double volume;
+    private double weight;
     private DeliveryState state;
 }

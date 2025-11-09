@@ -1,10 +1,7 @@
 package ru.yandex.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.yandex.practicum.commerce.dto.BookedProductsDto;
-import ru.yandex.practicum.commerce.dto.OrderDto;
-import ru.yandex.practicum.commerce.dto.OrderState;
-import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
+import ru.yandex.practicum.commerce.dto.*;
 import ru.yandex.practicum.model.Order;
 import ru.yandex.practicum.model.OrderProductInfo;
 
@@ -21,6 +18,7 @@ public class OrderMapper {
                 .isFragile(order.isFragile())
                 .weight(order.getWeight())
                 .volume(order.getVolume())
+                .deliveryId(order.getDeliveryId())
                 .productsPrice(order.getProductsPrice())
                 .products(order.getProducts().stream()
                         .collect(Collectors.toMap(
@@ -30,12 +28,10 @@ public class OrderMapper {
                 .build();
     }
 
-    public Order fromDto(ShoppingCartDto shoppingCartDto, BookedProductsDto bookedProductsDto) {
+    public Order fromDto(NewOrderDto orderDto, BookedProductsDto bookedProductsDto) {
         return Order.builder()
-                .cartId(shoppingCartDto.getId())
-                .username(shoppingCartDto.getUsername())
+                .cartId(orderDto.getCartId())
                 .state(OrderState.NEW)
-                .username(shoppingCartDto.getUsername())
                 .fragile(bookedProductsDto.getFragile())
                 .volume(bookedProductsDto.getDeliveryVolume())
                 .weight(bookedProductsDto.getDeliveryWeight())

@@ -63,20 +63,28 @@ public class OrderController implements OrderOperations {
         return service.processFailedPayment(orderId);
     }
 
+
     @Override
-    public OrderDto delivery(UUID orderId) {
+    public void deliveryStarted(UUID orderId) {
+        log.debug("request for handle start delivery of: {}", orderId);
+        service.deliveryStarted(orderId);
+    }
+
+    @Override
+    public void delivery(UUID orderId) {
         log.debug("request for process delivery: {}", orderId);
-        return service.delivery(orderId);
+        service.deliverySuccess(orderId);
     }
 
     @Override
-    public PaymentDto processFailedDelivery(UUID orderId) {
+    public void deliveryFailed(UUID orderId) {
         log.debug("request handle failed delivery: {}", orderId);
-        return service.processFailedDelivery(orderId);
+        service.deliveryFailed(orderId);
     }
 
+
     @Override
-    public PaymentDto completeOrder(UUID orderId) {
+    public OrderDto completeOrder(UUID orderId) {
         log.debug("request for complete order: {}", orderId);
         return service.completeOrder(orderId);
     }

@@ -14,5 +14,5 @@ public class NewOrderDto {
     private UUID cartId;
 
     @NotNull
-    private DeliveryAddress deliveryAddress;
+    private AddressDto deliveryAddress;
 }

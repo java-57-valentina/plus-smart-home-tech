@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.contract.delivery.order.DeliveryOperations;
 import ru.yandex.practicum.commerce.contract.shopping.cart.CartOperations;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
 import ru.yandex.practicum.commerce.dto.*;
@@ -55,8 +56,9 @@ public class OrderService {
     private final OrderRepository repository;
     private final OrderProductRepository orderProductRepository;
 
-    private final WarehouseOperations warehouseClient;
     private final CartOperations cartClient;
+    private final DeliveryOperations deliveryClient;
+    private final WarehouseOperations warehouseClient;
 
     public Page<OrderDto> getOrders(String username) {
         Pageable pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
@@ -85,13 +87,16 @@ public class OrderService {
             validateCart(shoppingCartDto);
             log.debug("check products availability in cart: {}", request.getCartId());
             BookedProductsDto bookedProductsDto = warehouseClient.check(shoppingCartDto);
-            Order order = OrderMapper.fromDto(shoppingCartDto, bookedProductsDto);
-            order.setProductsPrice(1);
+
+            Order order = OrderMapper.fromDto(request, bookedProductsDto);
+            order.setUsername(shoppingCartDto.getUsername());
             order.setCreatedAt(Timestamp.from(Instant.now()));
             order = repository.save(order);
             log.debug("saved order: {}", order);
             saveOrderProducts(order, shoppingCartDto.getProducts());
-            repository.flush();
+            repository.flush(); // если возникло исключение при выполнении SQL запроса - лучше заметить его тут
+
+            createDeliveryForOrder(order, bookedProductsDto, request.getDeliveryAddress());
 
             cartClient.remove(order.getUsername(), shoppingCartDto.getProducts().keySet());
             return OrderMapper.toDto(order);
@@ -112,7 +117,10 @@ public class OrderService {
         log.debug("return items: {} from order {}", request.getProducts(), request.getOrderId());
 
         Order order = getOrder(request.getOrderId());
-        validateOrderStateForAction(order, "return", Set.of(OrderState.NEW, OrderState.ASSEMBLED, OrderState.ASSEMBLY_FAILED));
+        validateOrderStateForAction(order, "return", Set.of(
+                OrderState.NEW,
+                OrderState.ASSEMBLED,
+                OrderState.ASSEMBLY_FAILED));
 
         if (order.getState() == OrderState.ASSEMBLED) {
             warehouseClient.returnItems(request.getOrderId(), request.getProducts());
@@ -158,20 +166,35 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderDto delivery(UUID orderId) {
+    public void deliveryStarted(UUID orderId) {
         Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "delivery", Set.of(OrderState.ASSEMBLED));
+        order.setState(OrderState.ON_DELIVERY);
+        OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public void deliverySuccess(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "delivery", Set.of(OrderState.ON_DELIVERY));
         order.setState(OrderState.DELIVERED);
+        OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public void deliveryFailed(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "delivery failed", Set.of(OrderState.ON_DELIVERY));
+        order.setState(OrderState.DELIVERY_FAILED);
+        OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public OrderDto completeOrder(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "complete", Set.of(OrderState.DELIVERED));
+        order.setState(OrderState.COMPLETED);
         return OrderMapper.toDto(order);
-    }
-
-    @Transactional
-    public PaymentDto processFailedDelivery(UUID orderId) {
-        return null;
-    }
-
-    @Transactional
-    public PaymentDto completeOrder(UUID orderId) {
-        return null;
     }
 
     public PaymentDto calculateTotal(UUID orderId) {
@@ -229,5 +252,20 @@ public class OrderService {
         if (!allowed_states.contains(order.getState())) {
             throw new IllegalOrderStateException(action, order);
         }
+    }
+
+    private void createDeliveryForOrder(Order order,
+                                        BookedProductsDto bookedProductsDto,
+                                        AddressDto addressDto) {
+        DeliveryDto deliveryDto = DeliveryDto.builder()
+                .orderId(order.getId())
+                .fromAddress(warehouseClient.getAddress())
+                .toAddress(addressDto)
+                .volume(bookedProductsDto.getDeliveryVolume())
+                .weight(order.getWeight())
+                .isFragile(bookedProductsDto.getFragile())
+                .build();
+        DeliveryDto delivery = deliveryClient.delivery(deliveryDto);
+        order.setDeliveryId(delivery.getDeliveryId());
     }
 }

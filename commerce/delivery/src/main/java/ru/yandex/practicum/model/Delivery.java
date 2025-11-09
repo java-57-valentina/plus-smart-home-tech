@@ -10,6 +10,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,9 +23,23 @@ public class Delivery {
     private UUID id;
 
     private UUID orderId;
-//    private AddressDto fromAddress;
-//    private AddressDto toAddress;
+
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_from", nullable = false)
+    private Address fromAddress;
+
+    @Embedded
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_to", nullable = false)
+    private Address toAddress;
 
     @Enumerated(EnumType.STRING)
     private DeliveryState state;
+
+    @Column(name = "fragile")
+    private boolean isFragile;
+    private double volume;
+    private double weight;
 }

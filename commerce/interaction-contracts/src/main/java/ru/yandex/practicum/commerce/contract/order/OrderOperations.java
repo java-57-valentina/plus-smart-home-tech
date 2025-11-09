@@ -1,6 +1,7 @@
 package ru.yandex.practicum.commerce.contract.order;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -26,20 +27,26 @@ public interface OrderOperations {
     @PostMapping("/return")
     OrderDto returnOrder(@RequestBody ReturnOrderDto request);
 
+
     @PostMapping("/payment")
-    PaymentDto processPayment(@RequestBody UUID orderId);
+    PaymentDto processPayment(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/payment/failed")
-    PaymentDto processFailedPayment(@RequestBody UUID orderId);
+    PaymentDto processFailedPayment(@RequestBody @NotNull UUID orderId);
+
+
+    @PostMapping("/delivery/start")
+    void deliveryStarted(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/delivery")
-    OrderDto delivery(@RequestBody UUID orderId);
+    void delivery(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/delivery/failed")
-    PaymentDto processFailedDelivery(@RequestBody UUID orderId);
+    void deliveryFailed(@RequestBody UUID orderId);
+
 
     @PostMapping("/completed")
-    PaymentDto completeOrder(@RequestBody UUID orderId);
+    OrderDto completeOrder(@RequestBody UUID orderId);
 
     @PostMapping("/calculate/total")
     PaymentDto calculateTotal(@RequestBody UUID orderId);
