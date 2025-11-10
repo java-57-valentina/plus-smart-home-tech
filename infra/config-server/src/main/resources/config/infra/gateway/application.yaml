@@ -43,6 +43,12 @@ spring:
           filters:
             - PrefixPath=/api/v1
 
+        - id: payment_route
+          uri: lb://payment
+          predicates:
+            - Path=/payment/**
+          filters:
+            - PrefixPath=/api/v1
 
 server:
   port: 8080
