@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.commerce.contract.delivery.order.DeliveryOperations;
+import ru.yandex.practicum.commerce.contract.delivery.DeliveryOperations;
 import ru.yandex.practicum.commerce.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.service.DeliveryService;

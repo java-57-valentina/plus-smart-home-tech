@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import ru.yandex.practicum.commerce.contract.delivery.order.DeliveryOperations;
+import ru.yandex.practicum.commerce.contract.delivery.DeliveryOperations;
 import ru.yandex.practicum.commerce.contract.shopping.cart.CartOperations;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
 

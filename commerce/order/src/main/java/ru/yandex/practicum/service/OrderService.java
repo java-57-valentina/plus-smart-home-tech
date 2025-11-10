@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.commerce.contract.delivery.order.DeliveryOperations;
+import ru.yandex.practicum.commerce.contract.delivery.DeliveryOperations;
 import ru.yandex.practicum.commerce.contract.shopping.cart.CartOperations;
 import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
 import ru.yandex.practicum.commerce.dto.*;

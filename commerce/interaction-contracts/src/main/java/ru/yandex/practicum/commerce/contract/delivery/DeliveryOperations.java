@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.contract.delivery.order;
+package ru.yandex.practicum.commerce.contract.delivery;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
