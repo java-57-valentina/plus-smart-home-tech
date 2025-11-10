@@ -125,3 +125,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+commerce/*/src/main/resources/data.sql
+META-INF/
