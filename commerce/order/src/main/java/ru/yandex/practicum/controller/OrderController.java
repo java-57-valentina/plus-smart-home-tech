@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.commerce.contract.order.OrderOperations;
 import ru.yandex.practicum.commerce.dto.NewOrderDto;
 import ru.yandex.practicum.commerce.dto.OrderDto;
-import ru.yandex.practicum.commerce.dto.PaymentDto;
 import ru.yandex.practicum.commerce.dto.ReturnOrderDto;
 import ru.yandex.practicum.service.OrderService;
 
@@ -52,13 +51,13 @@ public class OrderController implements OrderOperations {
     }
 
     @Override
-    public PaymentDto processPayment(UUID orderId) {
+    public OrderDto processPayment(UUID orderId) {
         log.debug("request for process payment: {}", orderId);
         return service.processPayment(orderId);
     }
 
     @Override
-    public PaymentDto processFailedPayment(UUID orderId) {
+    public OrderDto processFailedPayment(UUID orderId) {
         log.debug("request handle failed payment: {}", orderId);
         return service.processFailedPayment(orderId);
     }
@@ -90,26 +89,26 @@ public class OrderController implements OrderOperations {
     }
 
     @Override
-    public PaymentDto calculateTotal(UUID orderId) {
+    public OrderDto calculateTotal(UUID orderId) {
         log.debug("request for calculate total: {}", orderId);
         return service.calculateTotal(orderId);
     }
 
     @Override
-    public PaymentDto calculateDelivery(UUID orderId) {
+    public OrderDto calculateDelivery(UUID orderId) {
         log.debug("request for calculate delivery: {}", orderId);
         return service.calculateDelivery(orderId);
     }
 
     @Override
-    public OrderDto assembleOrder(UUID orderId) {
+    public void assemblyOrder(UUID orderId) {
         log.debug("request for assemble order: {}", orderId);
-        return service.assemblyOrder(orderId);
+        service.assemblyOrder(orderId);
     }
 
     @Override
-    public PaymentDto processFailedAssembly(UUID orderId) {
-        log.debug("STUB: request handle failed assemble: {}", orderId);
-        return null;
+    public void processFailedAssembly(UUID orderId) {
+        log.debug("request handle failed assembly: {}", orderId);
+        service.assemblyFailed(orderId);
     }
 }

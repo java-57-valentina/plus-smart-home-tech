@@ -53,9 +53,9 @@ public class WarehouseController implements WarehouseOperations {
     }
 
     @Override
-    public void assemblyProducts(UUID orderId, Map<UUID, Integer> products) {
+    public BookedProductsDto assemblyProducts(UUID orderId, Map<UUID, Integer> products) {
         log.debug("request for assembly products {} for order {}", products, orderId);
-        service.assemblyProducts(orderId, products);
+        return service.assemblyProducts(orderId, products);
     }
 
     @Override

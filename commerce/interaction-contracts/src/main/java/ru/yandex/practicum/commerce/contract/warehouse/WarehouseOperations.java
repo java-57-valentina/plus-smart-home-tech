@@ -33,7 +33,7 @@ public interface WarehouseOperations {
     BookedProductsDto check(@RequestBody @Valid ShoppingCartDto productDto) throws FeignException;
 
     @PostMapping("/assembly")
-    void assemblyProducts(@RequestParam @NotNull UUID orderId,
+    BookedProductsDto assemblyProducts(@RequestParam @NotNull UUID orderId,
                           @RequestBody Map<UUID, Integer> products);
 
     // Предоставить адрес склада для расчёта доставки

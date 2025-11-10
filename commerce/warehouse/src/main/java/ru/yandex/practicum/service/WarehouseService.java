@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.contract.order.OrderOperations;
 import ru.yandex.practicum.commerce.contract.shopping.store.StoreOperations;
 import ru.yandex.practicum.commerce.dto.*;
 import ru.yandex.practicum.commerce.exception.NotEnoughProductsException;
@@ -24,7 +25,9 @@ import java.util.stream.Collectors;
 public class WarehouseService {
 
     private final WarehouseRepository repository;
+
     private final StoreOperations storeClient;
+    private final OrderOperations orderClient;
 
     private static final String[] ADDRESSES =
             new String[] {"ADDRESS_1", "ADDRESS_2"};
@@ -109,49 +112,38 @@ public class WarehouseService {
 
     @Transactional
     public BookedProductsDto assemblyProducts(UUID orderId, Map<UUID, Integer> products) {
-        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllById(products.keySet()).stream()
-                .collect(Collectors.toMap(
-                        WarehouseGood::getProductId,
-                        Function.identity()));
-
         log.debug("assembly goods: {}", products);
         if (products.isEmpty()) {
             log.debug("Nothing to assembly");
             return new BookedProductsDto();
         }
 
-//        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllByProductIdIn(products.keySet()).stream()
-//                .collect(Collectors.toMap(WarehouseGood::getProductId, Function.identity()));
+        Map<UUID, WarehouseGood> warehouseGoods = repository.findAllById(products.keySet()).stream()
+                .collect(Collectors.toMap(
+                        WarehouseGood::getProductId,
+                        Function.identity()));
 
         BookedProductsDto bookedProductsDto = getBookedProductsDto(products, warehouseGoods);
 
         for (WarehouseGood warehouseGood : warehouseGoods.values()) {
             int quantity = warehouseGood.getQuantity();
             int needed = products.get(warehouseGood.getProductId());
+            if (needed > quantity) {
+                orderClient.processFailedAssembly(orderId);
+                throw new NotEnoughProductsException(warehouseGood.getProductId(), needed, quantity);
+            }
+
             log.debug("change quantity of {}: ({} -> {})", warehouseGood.getProductId(), quantity, quantity - needed);
-            warehouseGood.setQuantity(quantity - needed);
-            updateQuantityStateInStore(warehouseGood);
+            changeQuantity(warehouseGood, quantity - needed);
         }
 
-        return bookedProductsDto;
-
-
-//        orderClient.assembly(request.getOrderId());
-//
-//        BookedProductsDto bookedProductsParams = calculateDeliveryParams(streamSupplier);
-//        products.forEach((key, value) -> {
-//            WarehouseProduct product = getWarehouseProduct(key);
-//            int oldQuantity = product.getQuantity();
-//            int decreasingQuantity = value;
-//            product.setQuantity(oldQuantity - decreasingQuantity);
-//            warehouseRepository.save(product);
-//            updateQuantityInShoppingStore(product);
-//        });
+        orderClient.assemblyOrder(orderId);
 //        OrderBooking orderBooking = orderBookingMapper.mapToOrderBooking(bookedProductsParams, request);
 //        orderBooking = orderBookingRepository.save(orderBooking);
 //        return orderBookingMapper.mapToBookingDto(orderBooking);
-    }
 
+        return bookedProductsDto;
+    }
 
     @Transactional
     public void returnItems(UUID orderId, Map<UUID, Integer> products) {
@@ -167,9 +159,13 @@ public class WarehouseService {
 
     private void increaseQuantity(UUID productId, Integer increaseValue) {
         WarehouseGood good = getWarehouseGood(productId);
-        good.setQuantity(good.getQuantity() + increaseValue);
+        changeQuantity (good, good.getQuantity() + increaseValue);
+    }
+
+    private void changeQuantity(WarehouseGood good, Integer newQuantity) {
+        log.debug("updated quantity of good {}: ({} -> {})", good.getProductId(), good.getQuantity(), newQuantity);
+        good.setQuantity(newQuantity);
         updateQuantityStateInStore(good);
-        log.debug("updated quantity of good {} (+{})", good, increaseValue);
     }
 
     private void updateQuantityStateInStore(WarehouseGood good) {

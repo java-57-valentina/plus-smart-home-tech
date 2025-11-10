@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.NewOrderDto;
 import ru.yandex.practicum.commerce.dto.OrderDto;
-import ru.yandex.practicum.commerce.dto.PaymentDto;
 import ru.yandex.practicum.commerce.dto.ReturnOrderDto;
 
 import java.util.UUID;
@@ -29,10 +28,10 @@ public interface OrderOperations {
 
 
     @PostMapping("/payment")
-    PaymentDto processPayment(@RequestBody @NotNull UUID orderId);
+    OrderDto processPayment(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/payment/failed")
-    PaymentDto processFailedPayment(@RequestBody @NotNull UUID orderId);
+    OrderDto processFailedPayment(@RequestBody @NotNull UUID orderId);
 
 
     @PostMapping("/delivery/start")
@@ -49,14 +48,14 @@ public interface OrderOperations {
     OrderDto completeOrder(@RequestBody UUID orderId);
 
     @PostMapping("/calculate/total")
-    PaymentDto calculateTotal(@RequestBody UUID orderId);
+    OrderDto calculateTotal(@RequestBody UUID orderId);
 
     @PostMapping("/calculate/delivery")
-    PaymentDto calculateDelivery(@RequestBody UUID orderId);
+    OrderDto calculateDelivery(@RequestBody UUID orderId);
 
     @PostMapping("/assembly")
-    OrderDto assembleOrder(@RequestBody UUID orderId);
+    void assemblyOrder(@RequestBody UUID orderId);
 
     @PostMapping("/assembly/failed")
-    PaymentDto processFailedAssembly(@RequestBody UUID orderId);
+    void processFailedAssembly(@RequestBody UUID orderId);
 }

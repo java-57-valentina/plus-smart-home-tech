@@ -29,7 +29,6 @@ import ru.yandex.practicum.repository.OrderRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,7 +39,7 @@ public class OrderService {
         Для сервиса order необходимо использовать:
 
         Сервис delivery:
-            planDelivery для создания доставки;
+            OK - planDelivery для создания доставки;
             deliveryCost для расчёта стоимости доставки при общем расчёте стоимости
 
         Сервис payment:
@@ -50,7 +49,7 @@ public class OrderService {
 
         Сервис warehouse:
             OK - assemblyProductForOrderFromShoppingCart для сбора заказа по продуктовой корзине;
-            getWarehouseAddress для формирования адреса «Откуда», чтобы рассчитать и сохранить «Доставку» (идентификатор).
+            OK - getWarehouseAddress для формирования адреса «Откуда», чтобы рассчитать и сохранить «Доставку» (идентификатор).
      */
 
     private final OrderRepository repository;
@@ -156,12 +155,12 @@ public class OrderService {
     }
 
     @Transactional
-    public PaymentDto processPayment(UUID orderId) {
+    public OrderDto processPayment(UUID orderId) {
         return null;
     }
 
     @Transactional
-    public PaymentDto processFailedPayment(UUID orderId) {
+    public OrderDto processFailedPayment(UUID orderId) {
         return null;
     }
 
@@ -197,32 +196,26 @@ public class OrderService {
         return OrderMapper.toDto(order);
     }
 
-    public PaymentDto calculateTotal(UUID orderId) {
+    public OrderDto calculateTotal(UUID orderId) {
         return null;
     }
 
-    public PaymentDto calculateDelivery(UUID orderId) {
+    public OrderDto calculateDelivery(UUID orderId) {
         return null;
     }
 
     @Transactional
-    public OrderDto assemblyOrder(UUID orderId) {
+    public void assemblyOrder(UUID orderId) {
         log.debug("assembly order: {}", orderId);
         Order order = getOrder(orderId);
-        validateOrderStateForAction(order, "assembly", Set.of(OrderState.NEW, OrderState.ASSEMBLY_FAILED));
+        order.setState(OrderState.ASSEMBLED);
+    }
 
-        Map<UUID, Integer> orderProducts = order.getProducts().stream()
-                .collect(Collectors.toMap(
-                        OrderProductInfo::getProductId,
-                        OrderProductInfo::getQuantity));
-
-        try {
-            warehouseClient.assemblyProducts(orderId, orderProducts);
-            order.setState(OrderState.ASSEMBLED);
-        } catch (FeignException.FeignClientException e) {
-            order.setState(OrderState.ASSEMBLY_FAILED);
-        }
-        return OrderMapper.toDto(order);
+    @Transactional
+    public void assemblyFailed(UUID orderId) {
+        log.debug("failed assembly order: {}", orderId);
+        Order order = getOrder(orderId);
+        order.setState(OrderState.ASSEMBLY_FAILED);
     }
 
     private Order getOrder(UUID id) {
@@ -268,4 +261,6 @@ public class OrderService {
         DeliveryDto delivery = deliveryClient.delivery(deliveryDto);
         order.setDeliveryId(delivery.getDeliveryId());
     }
+
+
 }
