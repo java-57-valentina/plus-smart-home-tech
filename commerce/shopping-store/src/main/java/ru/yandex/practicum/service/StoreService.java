@@ -61,10 +61,8 @@ public class StoreService {
         }
     }
 
-
-    public StoreProductDto get(String productId) {
-        Product product = repository.findById(UUID.fromString(productId))
-                .orElseThrow(() -> new NotFoundException("Product", productId));
+    public StoreProductDto get(UUID productId) {
+        Product product = getProduct(productId);
         return ProductMapper.toDto(product);
     }
 
@@ -106,5 +104,10 @@ public class StoreService {
                 .orElseThrow(() -> new NotFoundException("Product", productId));
         product.setQuantityState(quantityState);
         return true;
+    }
+
+    private Product getProduct(UUID productId) {
+        return repository.findById(productId)
+                .orElseThrow(() -> new NotFoundException("Product", productId));
     }
 }

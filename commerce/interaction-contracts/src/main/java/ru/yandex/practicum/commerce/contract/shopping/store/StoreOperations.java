@@ -19,7 +19,7 @@ public interface StoreOperations {
                               @RequestParam String sort);
 
     @GetMapping("/{productId}")
-    StoreProductDto get(@PathVariable String productId);
+    StoreProductDto get(@PathVariable UUID productId);
 
     @PutMapping
     StoreProductDto add(@RequestBody @Valid StoreProductDto productDto);

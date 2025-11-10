@@ -1,8 +1,10 @@
 package ru.yandex.practicum.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.commerce.contract.payment.PaymentOperations;
@@ -16,15 +18,14 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/delivery")
+@RequestMapping("/api/v1/payment")
 public class PaymentController implements PaymentOperations {
 
     private final PaymentService service;
 
-
     @Override
-    public PaymentDto payment(OrderDto request) {
-        log.debug("request ");
+    public PaymentDto payment(@RequestBody @Valid OrderDto request) {
+        log.debug("request for create payment for {}", request);
         return service.payment(request);
     }
 
@@ -35,20 +36,20 @@ public class PaymentController implements PaymentOperations {
     }
 
     @Override
-    public double productCost(UUID orderId) {
-        log.debug("request ");
-        return service.productCost(orderId);
+    public double productCost(OrderDto orderDto) {
+        log.debug("request for products cost");
+        return service.productCost(orderDto);
     }
 
     @Override
-    public void refund(UUID orderId) {
+    public void refund(UUID paymentId) {
         log.debug("request ");
-        service.refund(orderId);
+        service.refund(paymentId);
     }
 
     @Override
-    public void failed(UUID orderId) {
+    public void failed(UUID paymentId) {
         log.debug("request ");
-        service.failed(orderId);
+        service.failed(paymentId);
     }
 }

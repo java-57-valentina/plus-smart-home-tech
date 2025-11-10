@@ -22,13 +22,13 @@ public interface PaymentOperations {
 
     // Расчёт стоимости товаров в заказе.
     @PostMapping("/productCost")
-    double productCost(@RequestBody @NotNull UUID orderId);
+    double productCost(@RequestBody @Valid OrderDto orderDto);
 
     // Метод для эмуляции успешной оплаты в платежного шлюза
     @PostMapping("/refund")
-    void refund(@RequestBody @NotNull UUID orderId);
+    void refund(@RequestBody @NotNull UUID paymentId);
 
-    // Метод для эмуляции отказа в оплате платежного шлюза.
+    // Метод для эмуляции отказа в оплате платежного шлюза
     @PostMapping("/failed")
-    void failed(@RequestBody @NotNull UUID orderId);
+    void failed(@RequestBody @NotNull UUID paymentId);
 }

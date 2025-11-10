@@ -50,16 +50,17 @@ public class OrderController implements OrderOperations {
         return service.returnOrder(request);
     }
 
+
     @Override
-    public OrderDto processPayment(UUID orderId) {
+    public void processPayment(UUID orderId) {
         log.debug("request for process payment: {}", orderId);
-        return service.processPayment(orderId);
+        service.paymentSuccess(orderId);
     }
 
     @Override
-    public OrderDto processFailedPayment(UUID orderId) {
+    public void paymentFailed(UUID orderId) {
         log.debug("request handle failed payment: {}", orderId);
-        return service.processFailedPayment(orderId);
+        service.paymentFailed(orderId);
     }
 
 
@@ -89,9 +90,9 @@ public class OrderController implements OrderOperations {
     }
 
     @Override
-    public OrderDto calculateTotal(UUID orderId) {
-        log.debug("request for calculate total: {}", orderId);
-        return service.calculateTotal(orderId);
+    public OrderDto calculateProductsCost(UUID orderId) {
+        log.debug("request for calculate products cost: {}", orderId);
+        return service.calculateProductCost(orderId);
     }
 
     @Override
@@ -101,13 +102,19 @@ public class OrderController implements OrderOperations {
     }
 
     @Override
-    public void assemblyOrder(UUID orderId) {
-        log.debug("request for assemble order: {}", orderId);
-        service.assemblyOrder(orderId);
+    public OrderDto calculateTotal(UUID orderId) {
+        log.debug("request for calculate total cost: {}", orderId);
+        return service.calculateTotal(orderId);
     }
 
     @Override
-    public void processFailedAssembly(UUID orderId) {
+    public void assembly(UUID orderId) {
+        log.debug("request for assemble order: {}", orderId);
+        service.assembly(orderId);
+    }
+
+    @Override
+    public void assemblyFailed(UUID orderId) {
         log.debug("request handle failed assembly: {}", orderId);
         service.assemblyFailed(orderId);
     }

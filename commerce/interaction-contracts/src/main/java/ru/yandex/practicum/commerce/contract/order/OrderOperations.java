@@ -1,5 +1,6 @@
 package ru.yandex.practicum.commerce.contract.order;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -21,17 +22,17 @@ public interface OrderOperations {
     OrderDto getOrder(@PathVariable UUID id);
 
     @PutMapping
-    OrderDto createOrder(@RequestBody NewOrderDto request);
+    OrderDto createOrder(@RequestBody @Valid NewOrderDto request);
 
     @PostMapping("/return")
-    OrderDto returnOrder(@RequestBody ReturnOrderDto request);
+    OrderDto returnOrder(@RequestBody @Valid ReturnOrderDto request);
 
 
     @PostMapping("/payment")
-    OrderDto processPayment(@RequestBody @NotNull UUID orderId);
+    void processPayment(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/payment/failed")
-    OrderDto processFailedPayment(@RequestBody @NotNull UUID orderId);
+    void paymentFailed(@RequestBody @NotNull UUID orderId);
 
 
     @PostMapping("/delivery/start")
@@ -45,17 +46,20 @@ public interface OrderOperations {
 
 
     @PostMapping("/completed")
-    OrderDto completeOrder(@RequestBody UUID orderId);
+    OrderDto completeOrder(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/calculate/total")
-    OrderDto calculateTotal(@RequestBody UUID orderId);
+    OrderDto calculateTotal(@RequestBody @NotNull UUID orderId);
+
+    @PostMapping("/calculate/products")
+    OrderDto calculateProductsCost(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/calculate/delivery")
-    OrderDto calculateDelivery(@RequestBody UUID orderId);
+    OrderDto calculateDelivery(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/assembly")
-    void assemblyOrder(@RequestBody UUID orderId);
+    void assembly(@RequestBody @NotNull UUID orderId);
 
     @PostMapping("/assembly/failed")
-    void processFailedAssembly(@RequestBody UUID orderId);
+    void assemblyFailed(@RequestBody @NotNull UUID orderId);
 }

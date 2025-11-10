@@ -129,7 +129,7 @@ public class WarehouseService {
             int quantity = warehouseGood.getQuantity();
             int needed = products.get(warehouseGood.getProductId());
             if (needed > quantity) {
-                orderClient.processFailedAssembly(orderId);
+                orderClient.assemblyFailed(orderId);
                 throw new NotEnoughProductsException(warehouseGood.getProductId(), needed, quantity);
             }
 
@@ -137,7 +137,7 @@ public class WarehouseService {
             changeQuantity(warehouseGood, quantity - needed);
         }
 
-        orderClient.assemblyOrder(orderId);
+        orderClient.assembly(orderId);
 //        OrderBooking orderBooking = orderBookingMapper.mapToOrderBooking(bookedProductsParams, request);
 //        orderBooking = orderBookingRepository.save(orderBooking);
 //        return orderBookingMapper.mapToBookingDto(orderBooking);

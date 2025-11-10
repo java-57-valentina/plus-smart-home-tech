@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS orders
     state           VARCHAR(16)     NOT NULL,
     cart_id         UUID            NOT NULL,
     delivery_id     UUID,
+    payment_id      UUID,
 
     fragile         BOOLEAN         NOT NULL DEFAULT FALSE,
     weight          DECIMAL(10, 2)  NOT NULL CHECK (weight > 0),

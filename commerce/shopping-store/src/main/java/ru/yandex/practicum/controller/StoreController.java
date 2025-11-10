@@ -31,7 +31,7 @@ public class StoreController implements StoreOperations {
     }
 
     @Override
-    public StoreProductDto get(@PathVariable String productId) {
+    public StoreProductDto get(@PathVariable UUID productId) {
         log.debug("request for get product by id: {}", productId);
         return service.get(productId);
     }

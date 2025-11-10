@@ -31,6 +31,9 @@ public class Order {
     @Column(name = "delivery_id")
     private UUID deliveryId;
 
+    @Column(name = "payment_id")
+    private UUID paymentId;
+
     @Column(name = "cart_id")
     private UUID cartId;
 

@@ -3,6 +3,7 @@ package ru.yandex.practicum.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import ru.yandex.practicum.commerce.dto.PaymentState;
 
 import java.util.UUID;
 
@@ -23,4 +24,11 @@ public class Payment {
 
     @Column(name = "order_id")
     private UUID orderId;
+
+    private double totalPayment;
+    private double deliveryTotal;
+    private double feeTotal;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentState state;
 }
