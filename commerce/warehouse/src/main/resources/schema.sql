@@ -9,6 +9,5 @@ CREATE TABLE IF NOT EXISTS goods (
     depth       DECIMAL(10, 2)  NOT NULL CHECK (depth > 0),
     fragile     BOOLEAN         NOT NULL DEFAULT FALSE,
 
-    quantity    INT             NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-    reserved    INT             NOT NULL DEFAULT 0 CHECK (reserved >= 0 AND reserved <= quantity)
+    quantity    INT             NOT NULL DEFAULT 0 CHECK (quantity >= 0)
 );

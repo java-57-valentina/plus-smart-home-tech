@@ -1,5 +1,6 @@
 package ru.yandex.practicum.service;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import ru.yandex.practicum.model.Product;
 import ru.yandex.practicum.repository.ProductRepository;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -109,5 +111,19 @@ public class StoreService {
     private Product getProduct(UUID productId) {
         return repository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product", productId));
+    }
+
+    public Map<UUID, Double> getProductPrices(@NotNull Set<UUID> uuids) {
+        Collection<Product> allByIdIn = repository.findAllByIdIn(uuids);
+
+        Map<UUID, Double> prices = repository.findAllByIdIn(uuids)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, Product::getPrice));
+
+        if (uuids.size() > prices.size()) {
+            uuids.removeAll(prices.keySet());
+            throw new NotFoundException("Products not found: [{}]", uuids);
+        }
+        return prices;
     }
 }

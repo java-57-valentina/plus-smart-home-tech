@@ -4,10 +4,6 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,22 +32,6 @@ import java.util.*;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class OrderService {
-    /*
-        Для сервиса order необходимо использовать:
-
-        Сервис delivery:
-            OK - planDelivery для создания доставки;
-            deliveryCost для расчёта стоимости доставки при общем расчёте стоимости
-
-        Сервис payment:
-            productCost для расчёта стоимости товаров;
-            getTotalCost для расчёта общей стоимости товаров, доставки и налога;
-            payment для запуска процесса оплаты
-
-        Сервис warehouse:
-            OK - assemblyProductForOrderFromShoppingCart для сбора заказа по продуктовой корзине;
-            OK - getWarehouseAddress для формирования адреса «Откуда», чтобы рассчитать и сохранить «Доставку» (идентификатор).
-     */
 
     private final OrderRepository repository;
     private final OrderProductRepository orderProductRepository;
@@ -61,24 +41,16 @@ public class OrderService {
     private final WarehouseOperations warehouseClient;
     private final PaymentOperations paymentClient;
 
-    public Page<OrderDto> getOrders(String username) {
-        Pageable pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
-        return repository.findByUsername(username, pageable).map(OrderMapper::toDto);
+    public List<OrderDto> getOrders(String username) {
+        return repository.findByUsername(username).stream()
+                .map(OrderMapper::toDto)
+                .toList();
     }
 
     public OrderDto getOrderById(UUID id) {
         return OrderMapper.toDto(getOrder(id));
     }
 
-    /*
-    1. Корзина не найдена - OK
-    2. Неактивная корзина - OK
-    3. Неуспешная проверка доступности товаров - OK
-    4. Неправильные товары в корзине - OK
-    5. Ошибка сохранения заказа в БД (?)
-    6. Ошибка сохранения товаров в БД (?)
-    7. Ошибка удаления товаров из корзины - OK
-    */
     @Transactional
     public OrderDto createOrder(NewOrderDto request) {
         log.debug("create new order {}", request);
@@ -246,7 +218,10 @@ public class OrderService {
         Order order = getOrder(orderId);
         validateOrderStateForAction(order, "assembly", Set.of(OrderState.NEW, OrderState.ASSEMBLY_FAILED));
         order.setState(OrderState.ASSEMBLED);
+
         createPaymentForOrder(order);
+        calculateDelivery(order.getId());
+        calculateTotal(order.getId());
     }
 
     @Transactional

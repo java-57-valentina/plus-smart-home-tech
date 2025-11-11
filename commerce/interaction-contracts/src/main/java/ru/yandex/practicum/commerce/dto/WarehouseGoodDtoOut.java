@@ -12,14 +12,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WarehouseGoodDtoOut {
-
     private UUID productId;
-
     private int quantity;
-
     private boolean fragile;
-
     private Dimension dimension;
-
     private double weight;
 }

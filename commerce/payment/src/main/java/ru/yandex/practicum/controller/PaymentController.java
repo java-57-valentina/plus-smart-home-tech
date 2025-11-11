@@ -31,25 +31,23 @@ public class PaymentController implements PaymentOperations {
 
     @Override
     public double totalCost(OrderDto request) {
-        log.debug("request ");
         return service.totalCost(request);
     }
 
     @Override
     public double getProductCost(OrderDto orderDto) {
-        log.debug("request for products cost");
         return service.getProductCost(orderDto);
     }
 
     @Override
     public void refund(UUID paymentId) {
-        log.debug("request ");
+        log.debug("request for refund payment {}", paymentId);
         service.refund(paymentId);
     }
 
     @Override
     public void failed(UUID paymentId) {
-        log.debug("request ");
+        log.debug("request for handle failed payment {}", paymentId);
         service.failed(paymentId);
     }
 }

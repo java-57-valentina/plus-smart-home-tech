@@ -2,7 +2,6 @@ package ru.yandex.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +11,7 @@ import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.commerce.dto.ReturnOrderDto;
 import ru.yandex.practicum.service.OrderService;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -23,9 +23,8 @@ public class OrderController implements OrderOperations {
 
     private final OrderService service;
 
-    // TODO: добавить параметры пагинации
     @Override
-    public Page<OrderDto> getUserOrders(String username) {
+    public List<OrderDto> getUserOrders(String username) {
         log.debug("request for get orders of user: {}", username);
         return service.getOrders(username);
     }

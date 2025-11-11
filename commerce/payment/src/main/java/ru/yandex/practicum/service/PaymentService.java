@@ -1,7 +1,9 @@
 package ru.yandex.practicum.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.contract.order.OrderOperations;
@@ -9,7 +11,7 @@ import ru.yandex.practicum.commerce.contract.shopping.store.StoreOperations;
 import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.commerce.dto.PaymentDto;
 import ru.yandex.practicum.commerce.dto.PaymentState;
-import ru.yandex.practicum.commerce.dto.StoreProductDto;
+import ru.yandex.practicum.commerce.exception.ConflictException;
 import ru.yandex.practicum.commerce.exception.NotFoundException;
 import ru.yandex.practicum.commerce.exception.NotEnoughInfoInOrderToCalculateException;
 import ru.yandex.practicum.mapper.PaymentMapper;
@@ -51,11 +53,20 @@ public class PaymentService {
     public double getProductCost(OrderDto orderDto) {
         double totalProductsCost = 0;
         Map<UUID, Integer> products = orderDto.getProducts();
+        Map<UUID, Double> prices;
 
-        // TODO: получать список продуктов одним запросом
+        try {
+            prices = storeClient.getProductPrices(products.keySet());
+        } catch (FeignException.FeignClientException e) {
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                throw new NotFoundException(e.getMessage());
+            }
+            throw e;
+        }
+
         for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
-            StoreProductDto product = storeClient.get(entry.getKey());
-            totalProductsCost += product.getPrice() * entry.getValue();
+            Double price = prices.get(entry.getKey());
+            totalProductsCost += price * entry.getValue();
         }
         return totalProductsCost;
     }
@@ -64,14 +75,28 @@ public class PaymentService {
     public void refund(UUID paymentId) {
         Payment payment = getPayment(paymentId);
         payment.setState(PaymentState.SUCCESS);
-        orderClient.processPayment(payment.getOrderId());
+        try {
+            orderClient.processPayment(payment.getOrderId());
+        } catch (FeignException.FeignClientException e) {
+            if (e.status() == HttpStatus.CONFLICT.value()) {
+                throw new ConflictException(e.getMessage());
+            }
+            throw e;
+        }
     }
 
     @Transactional
     public void failed(UUID paymentId) {
         Payment payment = getPayment(paymentId);
         payment.setState(PaymentState.FAILED);
-        orderClient.paymentFailed(payment.getOrderId());
+        try {
+            orderClient.paymentFailed(payment.getOrderId());
+        } catch (FeignException.FeignClientException e) {
+            if (e.status() == HttpStatus.CONFLICT.value()) {
+                throw new ConflictException(e.getMessage());
+            }
+            throw e;
+        }
     }
 
     private Payment getPayment(UUID id) {

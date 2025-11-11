@@ -1,6 +1,7 @@
 package ru.yandex.practicum.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,8 @@ import ru.yandex.practicum.commerce.contract.shopping.store.StoreOperations;
 import ru.yandex.practicum.commerce.dto.StoreProductDto;
 import ru.yandex.practicum.service.StoreService;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -34,6 +37,11 @@ public class StoreController implements StoreOperations {
     public StoreProductDto get(@PathVariable UUID productId) {
         log.debug("request for get product by id: {}", productId);
         return service.get(productId);
+    }
+
+    @Override
+    public Map<UUID, Double> getProductPrices(@RequestBody @NotNull Set<UUID> uuids) {
+        return service.getProductPrices(uuids);
     }
 
     @Override

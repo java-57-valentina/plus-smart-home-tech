@@ -99,6 +99,17 @@ public class ErrorHandler {
                 .build();
     }
 
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflictException(ConflictException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .reason("ConflictException")
+                .status(HttpStatus.CONFLICT)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
     @ExceptionHandler(NotEnoughInfoInOrderToCalculateException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleNotEnoughInfoInOrderToCalculateException(

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS payments (
     delivery_price  DECIMAL(10, 2),
     product_price   DECIMAL(10, 2),
 
-    state           varchar(10)     NOT NULL,
+    state           varchar(7)      NOT NULL,
 
     CONSTRAINT chk_payment_state    CHECK (state  IN ('PENDING', 'FAILED', 'SUCCESS' ))
 );

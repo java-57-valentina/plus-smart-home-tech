@@ -38,7 +38,6 @@ public interface WarehouseOperations {
 
     // Предоставить адрес склада для расчёта доставки
     @GetMapping("/address")
-
     AddressDto getAddress();
 
     @PostMapping("/return")

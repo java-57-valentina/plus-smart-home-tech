@@ -22,7 +22,6 @@ public class PaymentMapper {
                 .orderId(payment.getOrderId())
                 .totalPayment(payment.getTotalPrice())
                 .deliveryTotal(payment.getDeliveryPrice())
-                // .feeTotal(payment.getFeeTotal())
                 .state(payment.getState())
                 .build();
     }

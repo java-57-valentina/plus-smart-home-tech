@@ -132,16 +132,11 @@ public class WarehouseService {
                 orderClient.assemblyFailed(orderId);
                 throw new NotEnoughProductsException(warehouseGood.getProductId(), needed, quantity);
             }
-
             log.debug("change quantity of {}: ({} -> {})", warehouseGood.getProductId(), quantity, quantity - needed);
             changeQuantity(warehouseGood, quantity - needed);
         }
 
         orderClient.assembly(orderId);
-//        OrderBooking orderBooking = orderBookingMapper.mapToOrderBooking(bookedProductsParams, request);
-//        orderBooking = orderBookingRepository.save(orderBooking);
-//        return orderBookingMapper.mapToBookingDto(orderBooking);
-
         return bookedProductsDto;
     }
 
@@ -185,7 +180,6 @@ public class WarehouseService {
 
     private BookedProductsDto getBookedProductsDto(Map<UUID, Integer> products,
                                                    Map<UUID, WarehouseGood> warehouseGoods) {
-
         log.debug("getBookedProductsDto");
 
         double weight = 0.0;

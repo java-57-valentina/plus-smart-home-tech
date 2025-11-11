@@ -4,19 +4,19 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.NewOrderDto;
 import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.commerce.dto.ReturnOrderDto;
 
+import java.util.List;
 import java.util.UUID;
 
 @FeignClient(name = "order", path = "/api/v1/order")
 public interface OrderOperations {
 
     @GetMapping
-    Page<OrderDto> getUserOrders(@RequestParam @NotBlank String username);
+    List<OrderDto> getUserOrders(@RequestParam @NotBlank String username);
 
     @GetMapping("/{id}")
     OrderDto getOrder(@PathVariable UUID id);
