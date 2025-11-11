@@ -40,12 +40,18 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderState state;
 
-    private boolean fragile;
-    private double weight;
-    private double volume;
+    private Boolean fragile;
+    private Double weight;
+    private Double volume;
 
     @Column(name = "products_price")
-    private double productsPrice;
+    private Double productsPrice;
+
+    @Column(name = "delivery_price")
+    private Double deliveryPrice;
+
+    @Column(name = "total_price")
+    private Double totalPrice;
 
     @Column(name = "created_at")
     private Timestamp createdAt;

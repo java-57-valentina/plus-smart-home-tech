@@ -98,7 +98,14 @@ public class OrderService {
             repository.flush(); // если возникло исключение при выполнении SQL запроса - лучше заметить его тут
 
             createDeliveryForOrder(order, bookedProductsDto, request.getDeliveryAddress());
-            createPaymentForOrder(order);
+
+            Double productCost = paymentClient.getProductCost(OrderMapper.toDto(order));
+            log.info("Стоимость продуктов в заказе: {}", productCost);
+            order.setProductsPrice(productCost);
+
+//            Double deliveryCost = calculateDelivery(order.getId());
+//            log.info("Стоимость доставки заказа: {}", deliveryCost);
+//            order.setDeliveryPrice(deliveryCost);
 
             log.debug("removing products from cart...");
             cartClient.remove(order.getUsername(), shoppingCartDto.getProducts().keySet());
@@ -153,8 +160,7 @@ public class OrderService {
             orderProductRepository.deleteByOrderIdAndProductIdIn(request.getOrderId(), productsToDelete);
         }
         order = getOrder(request.getOrderId());
-        // Не используем статус PRODUCT_RETURNED, чтобы не потерять информацию о том, собран/оплачен ли заказ
-        // order.setState(OrderState.PRODUCT_RETURNED);
+        // Не ставим статус PRODUCT_RETURNED, чтобы не потерять информацию о том, что заказ собран
         return OrderMapper.toDto(order);
     }
 
@@ -170,7 +176,7 @@ public class OrderService {
     @Transactional
     public void paymentFailed(UUID orderId) {
         Order order = getOrder(orderId);
-        validateOrderStateForAction(order, "payment", Set.of(OrderState.ON_PAYMENT));
+        validateOrderStateForAction(order, "payment failed", Set.of(OrderState.ON_PAYMENT));
         order.setState(OrderState.PAYMENT_FAILED);
     }
 
@@ -178,7 +184,7 @@ public class OrderService {
     @Transactional
     public void deliveryStarted(UUID orderId) {
         Order order = getOrder(orderId);
-        validateOrderStateForAction(order, "delivery", Set.of(OrderState.ASSEMBLED));
+        validateOrderStateForAction(order, "delivery", Set.of(OrderState.PAID, OrderState.DELIVERY_FAILED));
         order.setState(OrderState.ON_DELIVERY);
         OrderMapper.toDto(order);
     }
@@ -211,17 +217,26 @@ public class OrderService {
     @Transactional
     public OrderDto calculateProductCost(UUID orderId) {
         Order order = getOrder(orderId);
-        double productPrice = paymentClient.productCost(OrderMapper.toDto(order));
+        double productPrice = paymentClient.getProductCost(OrderMapper.toDto(order));
         order.setProductsPrice(productPrice);
         return OrderMapper.toDto(order);
     }
 
+    @Transactional
     public OrderDto calculateTotal(UUID orderId) {
-        return null;
+        Order order = getOrder(orderId);
+        Double totalCost = paymentClient.totalCost(OrderMapper.toDto(order));
+        log.info("Total order cost: {}", totalCost);
+        order.setTotalPrice(totalCost);
+        return OrderMapper.toDto(order);
     }
 
+    @Transactional
     public OrderDto calculateDelivery(UUID orderId) {
-        return null;
+        Order order = getOrder(orderId);
+        double deliveryPrice = deliveryClient.calculateCost(OrderMapper.toDto(order));
+        order.setDeliveryPrice(deliveryPrice);
+        return OrderMapper.toDto(order);
     }
 
 
@@ -229,13 +244,16 @@ public class OrderService {
     public void assembly(UUID orderId) {
         log.debug("assembly order: {}", orderId);
         Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "assembly", Set.of(OrderState.NEW, OrderState.ASSEMBLY_FAILED));
         order.setState(OrderState.ASSEMBLED);
+        createPaymentForOrder(order);
     }
 
     @Transactional
     public void assemblyFailed(UUID orderId) {
         log.debug("failed assembly order: {}", orderId);
         Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "assembly failed", Set.of(OrderState.NEW, OrderState.ASSEMBLY_FAILED));
         order.setState(OrderState.ASSEMBLY_FAILED);
     }
 
@@ -285,7 +303,9 @@ public class OrderService {
     }
 
     private void createPaymentForOrder(Order order) {
+        validateOrderStateForAction(order, "create payment", Set.of(OrderState.ASSEMBLED));
         PaymentDto payment = paymentClient.payment(OrderMapper.toDto(order));
         order.setPaymentId(payment.getId());
+        order.setState(OrderState.ON_PAYMENT);
     }
 }

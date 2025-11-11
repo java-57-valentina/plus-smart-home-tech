@@ -51,9 +51,8 @@ public class DeliveryController implements DeliveryOperations {
     }
 
     @Override
-    public double deliveryCost(OrderDto deliveryId) {
+    public double calculateCost(OrderDto deliveryId) {
         log.debug("request for calculate delivery cost: {}", deliveryId);
-        service.deliveryCost(deliveryId);
-        return 0;
+        return service.deliveryCost(deliveryId);
     }
 }

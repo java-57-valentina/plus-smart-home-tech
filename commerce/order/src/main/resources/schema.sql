@@ -1,5 +1,5 @@
---DROP TABLE IF EXISTS order_products;
---DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS order_products;
+DROP TABLE IF EXISTS orders;
 
 CREATE TABLE IF NOT EXISTS orders
 (
@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS orders
     username        VARCHAR(64)     NOT NULL,
     state           VARCHAR(16)     NOT NULL,
     cart_id         UUID            NOT NULL,
+
     delivery_id     UUID,
     payment_id      UUID,
 
@@ -14,7 +15,9 @@ CREATE TABLE IF NOT EXISTS orders
     weight          DECIMAL(10, 2)  NOT NULL CHECK (weight > 0),
     volume          DECIMAL(10, 2)  NOT NULL CHECK (volume > 0),
 
-    products_price  DECIMAL(10, 2)  NOT NULL, -- CHECK (products_price > 0),
+    products_price  DECIMAL(10, 2)  NULL, -- CHECK (products_price > 0),
+    delivery_price  DECIMAL(10, 2)  NULL, -- CHECK (delivery_price > 0),
+    total_price     DECIMAL(10, 2)  NULL, -- CHECK (total_price > 0),
 
     created_at      TIMESTAMP       NOT NULL,
 

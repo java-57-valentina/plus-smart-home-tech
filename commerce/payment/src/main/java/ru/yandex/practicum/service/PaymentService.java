@@ -11,7 +11,7 @@ import ru.yandex.practicum.commerce.dto.PaymentDto;
 import ru.yandex.practicum.commerce.dto.PaymentState;
 import ru.yandex.practicum.commerce.dto.StoreProductDto;
 import ru.yandex.practicum.commerce.exception.NotFoundException;
-import ru.yandex.practicum.exception.NotEnoughInfoInOrderToCalculateException;
+import ru.yandex.practicum.commerce.exception.NotEnoughInfoInOrderToCalculateException;
 import ru.yandex.practicum.mapper.PaymentMapper;
 import ru.yandex.practicum.model.Payment;
 import ru.yandex.practicum.repository.PaymentRepository;
@@ -40,12 +40,15 @@ public class PaymentService {
         return PaymentMapper.toDto(payment);
     }
 
-    public double totalCost(OrderDto order) {
-        // TODO:
-        return 0;
+    public double totalCost(OrderDto orderDto) {
+        validatePaymentInfo(orderDto.getDeliveryPrice(), orderDto.getProductsPrice());
+
+        double productsPrice = orderDto.getProductsPrice(); // getProductCost(orderDto);
+        double deliveryPrice = orderDto.getDeliveryPrice();
+        return deliveryPrice + productsPrice * (1 + VAT_RATE);
     }
 
-    public double productCost(OrderDto orderDto) {
+    public double getProductCost(OrderDto orderDto) {
         double totalProductsCost = 0;
         Map<UUID, Integer> products = orderDto.getProducts();
 

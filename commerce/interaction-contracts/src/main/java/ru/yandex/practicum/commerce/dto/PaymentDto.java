@@ -13,9 +13,9 @@ public class PaymentDto {
     private UUID id;
     private UUID orderId;
 
-    private double totalPayment;
-    private double deliveryTotal;
-    private double feeTotal;
+    private Double totalPayment;
+    private Double deliveryTotal;
+    private Double feeTotal;
 
     private PaymentState state;
 }

@@ -22,7 +22,7 @@ public interface PaymentOperations {
 
     // Расчёт стоимости товаров в заказе.
     @PostMapping("/productCost")
-    double productCost(@RequestBody @Valid OrderDto orderDto);
+    double getProductCost(@RequestBody @Valid OrderDto orderDto);
 
     // Метод для эмуляции успешной оплаты в платежного шлюза
     @PostMapping("/refund")

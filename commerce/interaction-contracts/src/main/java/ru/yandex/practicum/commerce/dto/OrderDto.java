@@ -20,13 +20,15 @@ public class OrderDto {
     private String username;
 
     private UUID deliveryId;
-    // private UUID paymentId;
-    private double volume; // объём товаров;
-    private double weight; // вес товаров;
-    private boolean isFragile; // признак хрупкости;
-    private double productsPrice; // цена всех товаров;
-    // private double deliveryPrice; // цена доставки.
-    // private double totalPrice; // итоговая цена;
+    private UUID paymentId;
+
+    private Double volume; // объём товаров;
+    private Double weight; // вес товаров;
+    private Boolean fragile; // признак хрупкости;
+
+    private Double productsPrice; // цена всех товаров;
+    private Double deliveryPrice; // цена доставки.
+    private Double totalPrice; // итоговая цена;
 
     private Map<UUID, Integer> products;
     private OrderState state;

@@ -36,9 +36,9 @@ public class PaymentController implements PaymentOperations {
     }
 
     @Override
-    public double productCost(OrderDto orderDto) {
+    public double getProductCost(OrderDto orderDto) {
         log.debug("request for products cost");
-        return service.productCost(orderDto);
+        return service.getProductCost(orderDto);
     }
 
     @Override

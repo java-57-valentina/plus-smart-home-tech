@@ -30,5 +30,5 @@ public interface DeliveryOperations {
 
     // Расчёт полной стоимости доставки заказа
     @PostMapping("/cost")
-    double deliveryCost(@RequestBody OrderDto orderDto);
+    double calculateCost(@RequestBody OrderDto orderDto);
 }

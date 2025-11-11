@@ -98,4 +98,16 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(NotEnoughInfoInOrderToCalculateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNotEnoughInfoInOrderToCalculateException(
+            NotEnoughInfoInOrderToCalculateException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Not enough info")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

@@ -25,9 +25,14 @@ public class Payment {
     @Column(name = "order_id")
     private UUID orderId;
 
-    private double totalPayment;
-    private double deliveryTotal;
-    private double feeTotal;
+    @Column(name = "total_price")
+    private Double totalPrice;
+
+    @Column(name = "delivery_price")
+    private Double deliveryPrice;
+
+    @Column(name = "product_price")
+    private Double productPrice;
 
     @Enumerated(EnumType.STRING)
     private PaymentState state;

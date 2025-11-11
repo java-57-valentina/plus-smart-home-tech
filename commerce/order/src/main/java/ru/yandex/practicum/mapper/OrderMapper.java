@@ -15,11 +15,14 @@ public class OrderMapper {
                 .state(order.getState())
                 .username(order.getUsername())
                 .cartId(order.getCartId())
-                .isFragile(order.isFragile())
+                .fragile(order.getFragile())
                 .weight(order.getWeight())
                 .volume(order.getVolume())
                 .deliveryId(order.getDeliveryId())
+                .paymentId(order.getPaymentId())
                 .productsPrice(order.getProductsPrice())
+                .deliveryPrice(order.getDeliveryPrice())
+                .totalPrice(order.getTotalPrice())
                 .products(order.getProducts().stream()
                         .collect(Collectors.toMap(
                                         OrderProductInfo::getProductId,
