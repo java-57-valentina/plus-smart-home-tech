@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -45,8 +47,7 @@ public class StoreProductDto {
 
     @NotNull
     @Positive
-    private Double price;
-
+    private BigDecimal price;
 
     public enum QuantityState {
         ENDED, FEW, ENOUGH, MANY

@@ -87,4 +87,49 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(NoProductsInShoppingCartException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleNoProductsInShoppingCartException(NoProductsInShoppingCartException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .reason("NoProductsInShoppingCart")
+                .status(HttpStatus.CONFLICT)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflictException(ConflictException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .reason("ConflictException")
+                .status(HttpStatus.CONFLICT)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler(NotEnoughInfoInOrderToCalculateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNotEnoughInfoInOrderToCalculateException(
+            NotEnoughInfoInOrderToCalculateException ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Not enough info")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler(Throwable.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleOtherThrowable(Throwable ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .reason("Unexpected error")
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

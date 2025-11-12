@@ -15,7 +15,7 @@ import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
 import ru.yandex.practicum.service.CartService;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,6 +32,12 @@ public class CartController implements CartOperations {
     public ShoppingCartDto get(@RequestParam String username) {
         log.debug("request for get shopping cart by username: {}", username);
         return cartService.get(username);
+    }
+
+    @Override
+    public ShoppingCartDto getById(UUID cartId) {
+        log.debug("request for get shopping cart by id: {}", cartId);
+        return cartService.get(cartId);
     }
 
     // Добавить товар в корзину.
@@ -52,7 +58,7 @@ public class CartController implements CartOperations {
     // Удалить указанные товары из корзины пользователя.
     @Override
     public ShoppingCartDto remove(@RequestParam String username,
-                                  @RequestBody List<UUID> ids) {
+                                  @RequestBody Collection<UUID> ids) {
         log.debug("request for remove products form shopping cart of user: {}", username);
         return cartService.remove(username, ids);
     }

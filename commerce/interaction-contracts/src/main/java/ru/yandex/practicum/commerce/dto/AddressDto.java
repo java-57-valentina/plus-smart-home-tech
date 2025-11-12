@@ -1,15 +1,15 @@
 package ru.yandex.practicum.commerce.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
+@Data
 @Builder
-@ToString
-public class WarehouseAddressDto {
+@NoArgsConstructor
+@AllArgsConstructor
+public class AddressDto {
     private String country;
     private String city;
     private String street;

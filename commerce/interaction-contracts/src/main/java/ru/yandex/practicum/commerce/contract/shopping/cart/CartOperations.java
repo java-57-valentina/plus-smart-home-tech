@@ -8,7 +8,7 @@ import ru.yandex.practicum.commerce.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.dto.ShoppingCartDto;
 import ru.yandex.practicum.commerce.dto.UpdateQuantityRequest;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,6 +17,9 @@ public interface CartOperations {
 
     @GetMapping
     ShoppingCartDto get(@RequestParam String username);
+
+    @GetMapping("/{cartId}")
+    ShoppingCartDto getById(@PathVariable UUID cartId);
 
     @PutMapping
     ShoppingCartDto add(@RequestParam String username,
@@ -27,7 +30,7 @@ public interface CartOperations {
 
     @PostMapping("/remove")
     ShoppingCartDto remove(@RequestParam String username,
-                           @RequestBody List<UUID> ids);
+                           @RequestBody Collection<UUID> ids);
 
     @PostMapping("/change-quantity")
     ShoppingCartDto changeQuantity(@RequestParam @NotBlank String username,

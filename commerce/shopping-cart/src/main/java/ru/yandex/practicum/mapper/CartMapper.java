@@ -13,6 +13,7 @@ public class CartMapper {
         return ShoppingCartDto.builder()
                 .id(cart.getId())
                 .state(cart.getState())
+                .username(cart.getUsername())
                 .products(cart.getProducts().stream()
                         .collect(Collectors.toMap(
                         CartProduct::getProductId,

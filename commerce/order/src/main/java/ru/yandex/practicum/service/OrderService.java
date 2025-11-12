@@ -1,0 +1,283 @@
+package ru.yandex.practicum.service;
+
+import feign.FeignException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.contract.delivery.DeliveryOperations;
+import ru.yandex.practicum.commerce.contract.payment.PaymentOperations;
+import ru.yandex.practicum.commerce.contract.shopping.cart.CartOperations;
+import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
+import ru.yandex.practicum.commerce.dto.*;
+import ru.yandex.practicum.commerce.exception.NoProductsInShoppingCartException;
+import ru.yandex.practicum.commerce.exception.NotEnoughProductsException;
+import ru.yandex.practicum.commerce.exception.NotFoundException;
+import ru.yandex.practicum.exception.IllegalOrderStateException;
+import ru.yandex.practicum.exception.OrderValidationException;
+import ru.yandex.practicum.mapper.OrderMapper;
+import ru.yandex.practicum.model.Order;
+import ru.yandex.practicum.model.OrderProductInfo;
+import ru.yandex.practicum.repository.OrderProductRepository;
+import ru.yandex.practicum.repository.OrderRepository;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.*;
+
+@Slf4j
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class OrderService {
+
+    private final OrderRepository repository;
+    private final OrderProductRepository orderProductRepository;
+
+    private final CartOperations cartClient;
+    private final DeliveryOperations deliveryClient;
+    private final WarehouseOperations warehouseClient;
+    private final PaymentOperations paymentClient;
+
+    public List<OrderDto> getOrders(String username) {
+        return repository.findByUsername(username).stream()
+                .map(OrderMapper::toDto)
+                .toList();
+    }
+
+    public OrderDto getOrderById(UUID id) {
+        return OrderMapper.toDto(getOrder(id));
+    }
+
+    @Transactional
+    public OrderDto createOrder(NewOrderDto request) {
+        log.debug("create new order {}", request);
+        log.debug("check cart {}", request.getCartId());
+        try {
+            ShoppingCartDto shoppingCartDto = cartClient.getById(request.getCartId());
+            validateCart(shoppingCartDto);
+            log.debug("check products availability in cart: {}", request.getCartId());
+            BookedProductsDto bookedProductsDto = warehouseClient.check(shoppingCartDto);
+
+            Order order = OrderMapper.fromDto(request, bookedProductsDto);
+            order.setUsername(shoppingCartDto.getUsername());
+            order.setCreatedAt(Timestamp.from(Instant.now()));
+            order = repository.save(order);
+            log.debug("saved order: {}", order);
+            saveOrderProducts(order, shoppingCartDto.getProducts());
+            repository.flush(); // если возникло исключение при выполнении SQL запроса - лучше заметить его тут
+
+            createDeliveryForOrder(order, bookedProductsDto, request.getDeliveryAddress());
+
+            BigDecimal productCost = paymentClient.getProductCost(OrderMapper.toDto(order));
+            log.info("Стоимость продуктов в заказе: {}", productCost);
+            order.setProductsPrice(productCost);
+
+            log.debug("removing products from cart...");
+            cartClient.remove(order.getUsername(), shoppingCartDto.getProducts().keySet());
+            return OrderMapper.toDto(order);
+        } catch (FeignException.FeignClientException e) {
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                throw new NotFoundException(e.getMessage());
+            } else if (e.status() == HttpStatus.CONFLICT.value()) {
+                throw new NotEnoughProductsException(e.getMessage());
+            }
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            throw new OrderValidationException("cannot save order");
+        }
+    }
+
+    @Transactional
+    public OrderDto returnOrder(ReturnOrderDto request) {
+        log.debug("return items: {} from order {}", request.getProducts(), request.getOrderId());
+
+        Order order = getOrder(request.getOrderId());
+        validateOrderStateForAction(order, "return", Set.of(
+                OrderState.NEW,
+                OrderState.ASSEMBLED,
+                OrderState.ASSEMBLY_FAILED));
+
+        if (order.getState() == OrderState.ASSEMBLED) {
+            warehouseClient.returnItems(request.getOrderId(), request.getProducts());
+        }
+
+        Collection<OrderProductInfo> orderProducts =
+                orderProductRepository.findAllByOrderIdAndProductIdIn(request.getOrderId(), request.getProducts().keySet());
+        Collection<UUID> productsToDelete = new ArrayList<>();
+        orderProducts.forEach(pi -> {
+            Integer decreaseValue = request.getProducts().get(pi.getProductId());
+            if (decreaseValue != null) {
+                if (pi.getQuantity() < decreaseValue) {
+                    throw new IllegalArgumentException(
+                            String.format("Cannot return %d items, only %d available for product %s",
+                                    decreaseValue, pi.getQuantity(), pi.getProductId())
+                    );
+                } else if (pi.getQuantity() > decreaseValue) {
+                    pi.setQuantity(pi.getQuantity() - decreaseValue);
+                } else {
+                    productsToDelete.add(pi.getProductId());
+                }
+            }
+        });
+
+        if (!productsToDelete.isEmpty()) {
+            log.debug("productsToDelete: {}", productsToDelete);
+            orderProductRepository.deleteByOrderIdAndProductIdIn(request.getOrderId(), productsToDelete);
+        }
+        order = getOrder(request.getOrderId());
+        // Не ставим статус PRODUCT_RETURNED, чтобы не потерять информацию о том, что заказ собран
+        return OrderMapper.toDto(order);
+    }
+
+
+    @Transactional
+    public void paymentSuccess(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "payment", Set.of(OrderState.ON_PAYMENT));
+        order.setState(OrderState.PAID);
+        OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public void paymentFailed(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "payment failed", Set.of(OrderState.ON_PAYMENT));
+        order.setState(OrderState.PAYMENT_FAILED);
+    }
+
+
+    @Transactional
+    public void deliveryStarted(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "delivery", Set.of(OrderState.PAID, OrderState.DELIVERY_FAILED));
+        order.setState(OrderState.ON_DELIVERY);
+        OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public void deliverySuccess(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "delivery", Set.of(OrderState.ON_DELIVERY));
+        order.setState(OrderState.DELIVERED);
+        OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public void deliveryFailed(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "delivery failed", Set.of(OrderState.ON_DELIVERY));
+        order.setState(OrderState.DELIVERY_FAILED);
+        OrderMapper.toDto(order);
+    }
+
+
+    @Transactional
+    public OrderDto completeOrder(UUID orderId) {
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "complete", Set.of(OrderState.DELIVERED));
+        order.setState(OrderState.COMPLETED);
+        return OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public OrderDto calculateProductCost(UUID orderId) {
+        Order order = getOrder(orderId);
+        BigDecimal productPrice = paymentClient.getProductCost(OrderMapper.toDto(order));
+        order.setProductsPrice(productPrice);
+        return OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public OrderDto calculateTotal(UUID orderId) {
+        Order order = getOrder(orderId);
+        BigDecimal totalCost = paymentClient.totalCost(OrderMapper.toDto(order));
+        log.info("Total order cost: {}", totalCost);
+        order.setTotalPrice(totalCost);
+        return OrderMapper.toDto(order);
+    }
+
+    @Transactional
+    public OrderDto calculateDelivery(UUID orderId) {
+        Order order = getOrder(orderId);
+        BigDecimal deliveryPrice = deliveryClient.calculateCost(OrderMapper.toDto(order));
+        order.setDeliveryPrice(deliveryPrice);
+        return OrderMapper.toDto(order);
+    }
+
+
+    @Transactional
+    public void assembly(UUID orderId) {
+        log.debug("assembly order: {}", orderId);
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "assembly", Set.of(OrderState.NEW, OrderState.ASSEMBLY_FAILED));
+        order.setState(OrderState.ASSEMBLED);
+
+        createPaymentForOrder(order);
+        calculateDelivery(order.getId());
+        calculateTotal(order.getId());
+    }
+
+    @Transactional
+    public void assemblyFailed(UUID orderId) {
+        log.debug("failed assembly order: {}", orderId);
+        Order order = getOrder(orderId);
+        validateOrderStateForAction(order, "assembly failed", Set.of(OrderState.NEW, OrderState.ASSEMBLY_FAILED));
+        order.setState(OrderState.ASSEMBLY_FAILED);
+    }
+
+
+    private Order getOrder(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Order", id));
+    }
+
+    private void saveOrderProducts(Order order, Map<UUID, Integer> products) {
+        log.debug("saved products {} for orderId: {}", products, order.getId());
+        products.forEach((productId, quantity) -> {
+            OrderProductInfo productInfo = new OrderProductInfo(order.getId(), productId, quantity);
+            order.getProducts().add(productInfo);
+        });
+    }
+
+    private void validateCart(ShoppingCartDto shoppingCartDto) {
+        if (shoppingCartDto.getProducts().isEmpty()) {
+            throw new NoProductsInShoppingCartException();
+        }
+
+        if (shoppingCartDto.getState() == ShoppingCartState.DEACTIVATED) {
+            throw new IllegalStateException("Wrong cart state");
+        }
+    }
+
+    private void validateOrderStateForAction(Order order, String action, Set<OrderState> allowed_states) {
+        if (!allowed_states.contains(order.getState())) {
+            throw new IllegalOrderStateException(action, order);
+        }
+    }
+
+    private void createDeliveryForOrder(Order order,
+                                        BookedProductsDto bookedProductsDto,
+                                        AddressDto addressDto) {
+        DeliveryDto deliveryDto = DeliveryDto.builder()
+                .orderId(order.getId())
+                .fromAddress(warehouseClient.getAddress())
+                .toAddress(addressDto)
+                .volume(bookedProductsDto.getDeliveryVolume())
+                .weight(order.getWeight())
+                .isFragile(bookedProductsDto.getFragile())
+                .build();
+        DeliveryDto delivery = deliveryClient.delivery(deliveryDto);
+        order.setDeliveryId(delivery.getDeliveryId());
+    }
+
+    private void createPaymentForOrder(Order order) {
+        validateOrderStateForAction(order, "create payment", Set.of(OrderState.ASSEMBLED));
+        PaymentDto payment = paymentClient.payment(OrderMapper.toDto(order));
+        order.setPaymentId(payment.getId());
+        order.setState(OrderState.ON_PAYMENT);
+    }
+}

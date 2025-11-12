@@ -11,6 +11,10 @@ import ru.yandex.practicum.commerce.contract.warehouse.WarehouseOperations;
 import ru.yandex.practicum.commerce.dto.*;
 import ru.yandex.practicum.service.WarehouseService;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
+
 @Slf4j
 @Validated
 @RestController
@@ -18,29 +22,51 @@ import ru.yandex.practicum.service.WarehouseService;
 @RequestMapping("/api/v1/warehouse")
 public class WarehouseController implements WarehouseOperations {
 
-    private final WarehouseService warehouseService;
+    private final WarehouseService service;
 
     @Override
-    public void add(@RequestBody @Valid WarehouseGoodDto goodDto) {
+    public WarehouseGoodDtoOut get(UUID productId) {
+        return service.get(productId);
+    }
+
+    @Override
+    public Collection<WarehouseGoodDtoOut> getAll() {
+        return service.getAll();
+    }
+
+    @Override
+    public void add(@RequestBody @Valid WarehouseGoodDtoIn goodDto) {
         log.debug("request for add new good: {}", goodDto);
-        warehouseService.add(goodDto);
+        service.add(goodDto);
     }
 
     @Override
     public void add(@RequestBody @Valid WarehouseGoodQuantityDto request) {
         log.debug("request for update quantity of good id:{}", request);
-        warehouseService.updateQuantity(request);
+        service.updateQuantity(request);
     }
 
     @Override
     public BookedProductsDto check(@RequestBody @Valid ShoppingCartDto cardRequestDto) {
         log.debug("request for check cart: {}", cardRequestDto);
-        return warehouseService.check(cardRequestDto);
+        return service.check(cardRequestDto.getProducts());
     }
 
     @Override
-    public WarehouseAddressDto getAddress() {
+    public BookedProductsDto assemblyProducts(UUID orderId, Map<UUID, Integer> products) {
+        log.debug("request for assembly products {} for order {}", products, orderId);
+        return service.assemblyProducts(orderId, products);
+    }
+
+    @Override
+    public AddressDto getAddress() {
         log.debug("request for get address");
-        return warehouseService.getAddress();
+        return service.getAddress();
+    }
+
+    @Override
+    public void returnItems(UUID orderId, Map<UUID, Integer> products) {
+        log.debug("TODO: return items {} from order id:{}", products, orderId);
+        service.returnItems(orderId, products);
     }
 }

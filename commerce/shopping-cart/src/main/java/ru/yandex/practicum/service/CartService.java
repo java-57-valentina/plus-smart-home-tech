@@ -19,10 +19,7 @@ import ru.yandex.practicum.model.CartProduct;
 import ru.yandex.practicum.model.ShoppingCart;
 import ru.yandex.practicum.repository.CardRepository;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -33,9 +30,12 @@ public class CartService {
     private final WarehouseOperations warehouseClient;
 
     public ShoppingCartDto get(String username) {
-        ShoppingCart shoppingCart = repository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Shopping cart of user", username));
+        ShoppingCart shoppingCart = getCartOrThrow(username);
+        return CartMapper.toDto(shoppingCart);
+    }
 
+    public ShoppingCartDto get(UUID cartId) {
+        ShoppingCart shoppingCart = getCartOrThrow(cartId);
         return CartMapper.toDto(shoppingCart);
     }
 
@@ -64,7 +64,7 @@ public class CartService {
     }
 
     @Transactional
-    public ShoppingCartDto remove(String username, List<UUID> ids) {
+    public ShoppingCartDto remove(String username, Collection<UUID> ids) {
         ShoppingCart cart = getCartOrThrow(username);
         checkCartState(cart);
 
@@ -118,6 +118,11 @@ public class CartService {
     private ShoppingCart getCartOrThrow(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Shopping cart of user", username));
+    }
+
+    private ShoppingCart getCartOrThrow(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Shopping cart", id));
     }
 
     private ShoppingCart getOrCreateCart(String username) {
