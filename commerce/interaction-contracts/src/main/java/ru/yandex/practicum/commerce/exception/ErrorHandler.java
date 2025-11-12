@@ -121,4 +121,15 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(Throwable.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleOtherThrowable(Throwable ex) {
+        return ErrorResponse.builder()
+                .message(ex.getMessage())
+                .reason("Unexpected error")
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }
