@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.UUID;
@@ -26,9 +27,9 @@ public class OrderDto {
     private Double weight; // вес товаров;
     private Boolean fragile; // признак хрупкости;
 
-    private Double productsPrice; // цена всех товаров;
-    private Double deliveryPrice; // цена доставки.
-    private Double totalPrice; // итоговая цена;
+    private BigDecimal productsPrice; // цена всех товаров;
+    private BigDecimal deliveryPrice; // цена доставки.
+    private BigDecimal totalPrice; // итоговая цена;
 
     private Map<UUID, Integer> products;
     private OrderState state;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -13,8 +14,9 @@ public class PaymentDto {
     private UUID id;
     private UUID orderId;
 
-    private Double totalPayment;
-    private Double deliveryTotal;
+    private BigDecimal totalPayment;
+    private BigDecimal deliveryTotal;
+    private BigDecimal productTotal;
 
     private PaymentState state;
 }

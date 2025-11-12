@@ -8,6 +8,7 @@ import ru.yandex.practicum.commerce.dto.StoreProductDto;
 
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -25,7 +26,7 @@ public interface StoreOperations {
     StoreProductDto get(@PathVariable UUID productId);
 
     @PostMapping("/prices")
-    Map<UUID, Double> getProductPrices(@RequestBody @NotNull Set<UUID> uuids);
+    Map<UUID, BigDecimal> getProductPrices(@RequestBody @NotNull Set<UUID> uuids);
 
     @PutMapping
     StoreProductDto add(@RequestBody @Valid StoreProductDto productDto);

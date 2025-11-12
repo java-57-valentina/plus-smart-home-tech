@@ -23,6 +23,7 @@ import ru.yandex.practicum.model.OrderProductInfo;
 import ru.yandex.practicum.repository.OrderProductRepository;
 import ru.yandex.practicum.repository.OrderRepository;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -71,13 +72,9 @@ public class OrderService {
 
             createDeliveryForOrder(order, bookedProductsDto, request.getDeliveryAddress());
 
-            Double productCost = paymentClient.getProductCost(OrderMapper.toDto(order));
+            BigDecimal productCost = paymentClient.getProductCost(OrderMapper.toDto(order));
             log.info("Стоимость продуктов в заказе: {}", productCost);
             order.setProductsPrice(productCost);
-
-//            Double deliveryCost = calculateDelivery(order.getId());
-//            log.info("Стоимость доставки заказа: {}", deliveryCost);
-//            order.setDeliveryPrice(deliveryCost);
 
             log.debug("removing products from cart...");
             cartClient.remove(order.getUsername(), shoppingCartDto.getProducts().keySet());
@@ -189,7 +186,7 @@ public class OrderService {
     @Transactional
     public OrderDto calculateProductCost(UUID orderId) {
         Order order = getOrder(orderId);
-        double productPrice = paymentClient.getProductCost(OrderMapper.toDto(order));
+        BigDecimal productPrice = paymentClient.getProductCost(OrderMapper.toDto(order));
         order.setProductsPrice(productPrice);
         return OrderMapper.toDto(order);
     }
@@ -197,7 +194,7 @@ public class OrderService {
     @Transactional
     public OrderDto calculateTotal(UUID orderId) {
         Order order = getOrder(orderId);
-        Double totalCost = paymentClient.totalCost(OrderMapper.toDto(order));
+        BigDecimal totalCost = paymentClient.totalCost(OrderMapper.toDto(order));
         log.info("Total order cost: {}", totalCost);
         order.setTotalPrice(totalCost);
         return OrderMapper.toDto(order);
@@ -206,7 +203,7 @@ public class OrderService {
     @Transactional
     public OrderDto calculateDelivery(UUID orderId) {
         Order order = getOrder(orderId);
-        double deliveryPrice = deliveryClient.calculateCost(OrderMapper.toDto(order));
+        BigDecimal deliveryPrice = deliveryClient.calculateCost(OrderMapper.toDto(order));
         order.setDeliveryPrice(deliveryPrice);
         return OrderMapper.toDto(order);
     }

@@ -12,6 +12,7 @@ import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.commerce.dto.PaymentDto;
 import ru.yandex.practicum.service.PaymentService;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Slf4j
@@ -30,12 +31,12 @@ public class PaymentController implements PaymentOperations {
     }
 
     @Override
-    public double totalCost(OrderDto request) {
+    public BigDecimal totalCost(OrderDto request) {
         return service.totalCost(request);
     }
 
     @Override
-    public double getProductCost(OrderDto orderDto) {
+    public BigDecimal getProductCost(OrderDto orderDto) {
         return service.getProductCost(orderDto);
     }
 

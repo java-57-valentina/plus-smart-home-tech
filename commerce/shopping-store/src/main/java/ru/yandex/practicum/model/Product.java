@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import ru.yandex.practicum.commerce.dto.StoreProductDto;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -27,7 +28,7 @@ public class Product {
     private String productName;
 
     private String description;
-    private Double price;
+    private BigDecimal price;
 
     @Column(name = "image_src")
     private String imageSrc;

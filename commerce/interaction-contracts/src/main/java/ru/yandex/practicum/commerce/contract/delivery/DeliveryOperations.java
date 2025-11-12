@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.dto.OrderDto;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @FeignClient(name = "delivery", path = "/api/v1/delivery")
@@ -30,5 +31,5 @@ public interface DeliveryOperations {
 
     // Расчёт полной стоимости доставки заказа
     @PostMapping("/cost")
-    double calculateCost(@RequestBody OrderDto orderDto);
+    BigDecimal calculateCost(@RequestBody OrderDto orderDto);
 }

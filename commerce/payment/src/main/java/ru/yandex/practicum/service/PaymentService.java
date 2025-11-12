@@ -18,6 +18,7 @@ import ru.yandex.practicum.mapper.PaymentMapper;
 import ru.yandex.practicum.model.Payment;
 import ru.yandex.practicum.repository.PaymentRepository;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,7 +32,7 @@ public class PaymentService {
     private final OrderOperations orderClient;
     private final StoreOperations storeClient;
 
-    private static final double VAT_RATE = 0.20;
+    private static final double VAT_MULTIPLIER = 1.1;
 
     @Transactional
     public PaymentDto payment(OrderDto order) {
@@ -42,18 +43,18 @@ public class PaymentService {
         return PaymentMapper.toDto(payment);
     }
 
-    public double totalCost(OrderDto orderDto) {
+    public BigDecimal totalCost(OrderDto orderDto) {
         validatePaymentInfo(orderDto.getDeliveryPrice(), orderDto.getProductsPrice());
 
-        double productsPrice = orderDto.getProductsPrice(); // getProductCost(orderDto);
-        double deliveryPrice = orderDto.getDeliveryPrice();
-        return deliveryPrice + productsPrice * (1 + VAT_RATE);
+        return orderDto.getProductsPrice()
+                .multiply(BigDecimal.valueOf(VAT_MULTIPLIER))
+                .add(orderDto.getDeliveryPrice());
     }
 
-    public double getProductCost(OrderDto orderDto) {
-        double totalProductsCost = 0;
+    public BigDecimal getProductCost(OrderDto orderDto) {
+        BigDecimal totalProductsCost = BigDecimal.ZERO;
         Map<UUID, Integer> products = orderDto.getProducts();
-        Map<UUID, Double> prices;
+        Map<UUID, BigDecimal> prices;
 
         try {
             prices = storeClient.getProductPrices(products.keySet());
@@ -65,8 +66,9 @@ public class PaymentService {
         }
 
         for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
-            Double price = prices.get(entry.getKey());
-            totalProductsCost += price * entry.getValue();
+            BigDecimal price = prices.get(entry.getKey());
+            BigDecimal amount = BigDecimal.valueOf(entry.getValue());
+            totalProductsCost = totalProductsCost.add(price.multiply(amount));
         }
         return totalProductsCost;
     }
@@ -103,9 +105,9 @@ public class PaymentService {
         return repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Payment", id));
     }
-    private void validatePaymentInfo(Double... prices) {
-        for (Double price : prices) {
-            if (price == null || price == 0) {
+    private void validatePaymentInfo(BigDecimal... prices) {
+        for (BigDecimal price : prices) {
+            if (price == null || price.equals(BigDecimal.ZERO)) {
                 throw new NotEnoughInfoInOrderToCalculateException("Not enough payment info in order");
             }
         }

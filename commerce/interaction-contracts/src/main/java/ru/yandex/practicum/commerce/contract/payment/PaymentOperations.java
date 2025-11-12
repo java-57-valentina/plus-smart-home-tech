@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.dto.OrderDto;
 import ru.yandex.practicum.commerce.dto.PaymentDto;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @FeignClient(name = "payment", path = "/api/v1/payment")
@@ -18,11 +19,11 @@ public interface PaymentOperations {
 
     // Расчёт полной стоимости заказа
     @PostMapping("/totalCost")
-    double totalCost(@RequestBody @Valid OrderDto request);
+    BigDecimal totalCost(@RequestBody @Valid OrderDto request);
 
     // Расчёт стоимости товаров в заказе.
     @PostMapping("/productCost")
-    double getProductCost(@RequestBody @Valid OrderDto orderDto);
+    BigDecimal getProductCost(@RequestBody @Valid OrderDto orderDto);
 
     // Метод для эмуляции успешной оплаты в платежного шлюза
     @PostMapping("/refund")

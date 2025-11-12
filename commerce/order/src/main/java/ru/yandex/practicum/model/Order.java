@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import ru.yandex.practicum.commerce.dto.OrderState;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,13 +46,13 @@ public class Order {
     private Double volume;
 
     @Column(name = "products_price")
-    private Double productsPrice;
+    private BigDecimal productsPrice;
 
     @Column(name = "delivery_price")
-    private Double deliveryPrice;
+    private BigDecimal deliveryPrice;
 
     @Column(name = "total_price")
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     @Column(name = "created_at")
     private Timestamp createdAt;

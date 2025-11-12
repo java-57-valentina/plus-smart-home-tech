@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import ru.yandex.practicum.commerce.dto.PaymentState;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -26,13 +27,13 @@ public class Payment {
     private UUID orderId;
 
     @Column(name = "total_price")
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     @Column(name = "delivery_price")
-    private Double deliveryPrice;
+    private BigDecimal deliveryPrice;
 
     @Column(name = "product_price")
-    private Double productPrice;
+    private BigDecimal productPrice;
 
     @Enumerated(EnumType.STRING)
     private PaymentState state;

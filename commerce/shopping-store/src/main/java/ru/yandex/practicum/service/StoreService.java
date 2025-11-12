@@ -15,6 +15,7 @@ import ru.yandex.practicum.mapper.ProductMapper;
 import ru.yandex.practicum.model.Product;
 import ru.yandex.practicum.repository.ProductRepository;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -113,10 +114,10 @@ public class StoreService {
                 .orElseThrow(() -> new NotFoundException("Product", productId));
     }
 
-    public Map<UUID, Double> getProductPrices(@NotNull Set<UUID> uuids) {
+    public Map<UUID, BigDecimal> getProductPrices(@NotNull Set<UUID> uuids) {
         Collection<Product> allByIdIn = repository.findAllByIdIn(uuids);
 
-        Map<UUID, Double> prices = repository.findAllByIdIn(uuids)
+        Map<UUID, BigDecimal> prices = repository.findAllByIdIn(uuids)
                 .stream()
                 .collect(Collectors.toMap(Product::getId, Product::getPrice));
 

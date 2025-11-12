@@ -16,6 +16,7 @@ import ru.yandex.practicum.model.Address;
 import ru.yandex.practicum.model.Delivery;
 import ru.yandex.practicum.repository.DeliveryRepository;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -89,28 +90,33 @@ public class DeliveryService {
         }
     }
 
-    public double deliveryCost(OrderDto orderDto) {
+    public BigDecimal deliveryCost(OrderDto orderDto) {
         Delivery delivery = getDelivery(orderDto.getDeliveryId());
 
         Address fromAddress = delivery.getFromAddress();
         Address toAddress = delivery.getToAddress();
 
-        double totalCost = BASE_COST;
+        final BigDecimal warehouseMultiplier = fromAddress.getCity().equals("ADDRESS_1")
+                ? BigDecimal.valueOf(WAREHOUSE_ADDRESS_1_MULTIPLIER)
+                : BigDecimal.valueOf(WAREHOUSE_ADDRESS_2_MULTIPLIER);
 
-        totalCost *= fromAddress.getCity().equals("ADDRESS_1")
-                ? WAREHOUSE_ADDRESS_1_MULTIPLIER
-                : WAREHOUSE_ADDRESS_2_MULTIPLIER;
+        final BigDecimal fragileMultiplier = orderDto.getFragile()
+                ? BigDecimal.valueOf(FRAGILE_SURCHARGE)
+                : BigDecimal.ONE;
 
-        if (orderDto.getFragile())
-            totalCost *= FRAGILE_SURCHARGE;
+        final BigDecimal weightSurcharge = BigDecimal.valueOf(delivery.getWeight() * WEIGHT_SURCHARGE);
+        final BigDecimal volumeSurcharge = BigDecimal.valueOf(delivery.getVolume() * VOLUME_SURCHARGE);
 
-        totalCost += delivery.getWeight() * WEIGHT_SURCHARGE;
-        totalCost += delivery.getVolume() * VOLUME_SURCHARGE;
+        final BigDecimal deliveryMultiplier = isSameStreet(fromAddress, toAddress)
+                ? BigDecimal.ONE
+                : BigDecimal.valueOf(ADDRESS_DELIVERY_MULTIPLIER);
 
-        if (!isSameStreet(fromAddress, toAddress))
-            totalCost *= ADDRESS_DELIVERY_MULTIPLIER;
-
-        return totalCost;
+        return BigDecimal.valueOf(BASE_COST)
+                .multiply(warehouseMultiplier)
+                .multiply(fragileMultiplier)
+                .add(weightSurcharge)
+                .add(volumeSurcharge)
+                .multiply(deliveryMultiplier);
     }
 
     private boolean isSameStreet(Address address1, Address address2) {

@@ -11,6 +11,7 @@ import ru.yandex.practicum.commerce.contract.shopping.store.StoreOperations;
 import ru.yandex.practicum.commerce.dto.StoreProductDto;
 import ru.yandex.practicum.service.StoreService;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -40,7 +41,7 @@ public class StoreController implements StoreOperations {
     }
 
     @Override
-    public Map<UUID, Double> getProductPrices(@RequestBody @NotNull Set<UUID> uuids) {
+    public Map<UUID, BigDecimal> getProductPrices(@RequestBody @NotNull Set<UUID> uuids) {
         return service.getProductPrices(uuids);
     }
 
